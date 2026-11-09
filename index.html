@@ -147,6 +147,13 @@ td.emptyrow{padding:16px 12px;border-top:1px solid var(--fine)}
 tr.colhead th{border-top:0}
 tr.flash td{animation:flash 1.6s ease-out}
 @keyframes flash{from{background:var(--blue100)}to{background:transparent}}
+/* groups table of contents */
+.toc{position:fixed;top:120px;bottom:96px;left:calc(50% + 504px);width:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;z-index:5}
+.toc a{display:block;padding:6px 12px;border-left:2px solid var(--fine);color:var(--text);text-decoration:none;font-size:14px}
+.toc a:hover{background:#0000000a}
+.toc a.on{border-left-color:var(--primary);color:var(--primary);font-weight:600}
+table.sect{scroll-margin-top:72px}
+@media (max-width:1460px){ .content:has(.toc) .page.narrow{margin-left:max(32px,calc(50% - 600px));margin-right:auto;max-width:min(960px,calc(100% - 256px))} .toc{left:auto;right:24px} }
 /* review cards */
 .gcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
 .gcard{border:1px solid var(--fine);border-radius:4px;padding:16px 20px}
@@ -167,6 +174,9 @@ tr.flash td{animation:flash 1.6s ease-out}
 .sectionhead+.personrow{border-top:0;padding-top:0}
 .personrow .span2{grid-column:span 2}
 .personrow .iconbtn{margin-top:10px}
+.drafts{margin-top:16px;padding:16px;background:var(--blue50);border-radius:4px}
+.drafts .personrow:first-child{border-top:0;padding-top:0}
+.draftactions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}
 .sectionhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
 </style>
 </head>
@@ -236,7 +246,7 @@ function fresh(){
     screen:'programs', draft:null,
     program:{name:'',partner:'',language:'English',docs:[]},
     method:'upload', uploadState:'empty', fileName:'',
-    trainers:[], teachers:[],
+    trainers:[], teachers:[], drafts:{trainers:[],teachers:[]},
     manual:{trainers:[person(['','',''])],teachers:[person(['','',''])]},
     groups:[], groupsBuiltFor:null,
     selected:new Set(), filter:'', sort:{key:'group',dir:1}, order:[], showNames:false,
@@ -367,7 +377,7 @@ function scrW1(){
   const p=S.program,e=S.errors;
   const docs=p.docs.map((d,i)=>`<div class="filechip">${I('doc')}<span style="flex:1">${esc(d)}</span><button class="iconbtn" title="Remove" data-act="rmDoc" data-i="${i}">${I('close','sm')}</button></div>`).join('');
   return wizard(`<div class="page narrow stack">
-    <div><p class="cap">About this program</p><h1 class="h3">Program details</h1><p class="ann">Start with the basics. Nothing is sent to anyone until you launch the program.</p></div>
+    <h1 class="h3">Program details</h1>
     ${field('f-name','Program name',p.name,{err:e.name,model:'program.name'})}
     ${field('f-partner','Organization name',p.partner,{model:'program.partner'})}
     <div>${selectField('f-lang','Language',p.language,['English','Luganda','Ateso','Swahili'].map(v=>({v,t:v})),{model:'program.language'})}<div class="help">Used for bot messages and templates</div></div>
@@ -396,8 +406,11 @@ function scrW3Upload(){
     const head='<thead><tr><th>Name</th><th>District</th><th>School</th><th>Subjects</th><th></th></tr></thead>';
     inner=`<div class="filechip" style="border:1px solid var(--fine);border-radius:4px">${I('doc')}<div style="flex:1"><div>${esc(S.fileName)}</div><div class="cap">${plural(S.trainers.length,'trainer')} and ${plural(S.teachers.length,'teacher')} found</div></div><button class="btn flat" data-act="replaceFile">REPLACE FILE</button></div>
      <div class="alert success">${I('ok')}<div>File uploaded successfully.</div></div>
-     <div><h2 class="h5" style="margin-bottom:8px">Trainers (${S.trainers.length})</h2><table>${head}<tbody>${rows(S.trainers)}</tbody></table></div>
-     <div><h2 class="h5" style="margin-bottom:8px">Teachers (${S.teachers.length})</h2><table>${head}<tbody>${rows(S.teachers)}</tbody></table></div>`;
+     ${S.errors.summary?`<div class="alert error">${I('err')}<div>${S.errors.summary}</div></div>`:''}
+     <div><h2 class="h5" style="margin-bottom:8px">Trainers (${S.trainers.length})</h2><table>${head}<tbody>${rows(S.trainers)}</tbody></table>
+       ${draftRows('trainers')}${S.drafts.trainers.length?'':`<button class="btn flat" style="margin-top:8px" data-act="addDraft" data-kind="trainers">${I('add','sm')}ADD TRAINER</button>`}</div>
+     <div><h2 class="h5" style="margin-bottom:8px">Teachers (${S.teachers.length})</h2><table>${head}<tbody>${rows(S.teachers)}</tbody></table>
+       ${draftRows('teachers')}${S.drafts.teachers.length?'':`<button class="btn flat" style="margin-top:8px" data-act="addDraft" data-kind="teachers">${I('add','sm')}ADD TEACHER</button>`}</div>`;
   } else {
     inner=`<div class="drop" style="padding:40px">${I('upload')}<button class="btn primary" data-act="upload">UPLOAD A FILE</button><div class="cap">Excel (.xlsx) or CSV</div></div>
      ${S.errors.file?`<div class="alert error">${I('err')}<div>${S.errors.file}</div></div>`:''}
@@ -413,6 +426,47 @@ function scrW3Upload(){
   }
   const intro=S.uploadState==='done'?'Check what we found in your file. Edit anyone whose details need fixing.':'Add all trainers and teachers in one spreadsheet.';
   return wizard(`<div class="page narrow stack"><div><h1 class="h3">Upload trainers and teachers</h1><p class="ann">${intro}</p></div>${inner}</div>`,{contDisabled:S.uploadState==='loading'});
+}
+// Inline editor for people added on the upload review (same fields as the manual path)
+function draftRows(kind){
+  const e=S.errors,arr=S.drafts[kind];if(!arr.length)return '';
+  return `<div class="drafts">${arr.map((p,i)=>{const k=`d-${kind}-${i}`;return `<div class="personrow">
+     ${field(`${k}-name`,'Name',p.name,{err:e[`${k}-name`],model:`drafts.${kind}.${i}.name`})}
+     ${field(`${k}-phone`,'Phone',p.phone,{err:e[`${k}-phone`],model:`drafts.${kind}.${i}.phone`})}
+     ${field(`${k}-district`,'District',p.district,{err:e[`${k}-district`],model:`drafts.${kind}.${i}.district`})}
+     <span></span>
+     ${field(`${k}-school`,'School (optional)',p.school,{model:`drafts.${kind}.${i}.school`})}
+     <div class="span2">${field(`${k}-subjects`,'Subjects (optional)',p.subjects,{model:`drafts.${kind}.${i}.subjects`,help:'Separate subjects with commas'})}</div>
+     <div class="draftactions"><button class="btn flat" data-act="rmDraft" data-kind="${kind}" data-i="${i}">CANCEL</button>
+       <button class="btn primary" data-act="confirmDraft" data-kind="${kind}" data-i="${i}">ADD ${kind==='trainers'?'TRAINER':'TEACHER'}</button></div></div>`}).join('')}</div>`;
+}
+function validateDraft(kind,i){
+  const e={},p=S.drafts[kind][i],k=`d-${kind}-${i}`,norm=x=>x.replace(/[\s-]/g,'');
+  const others=[...S.trainers,...S.teachers,...['trainers','teachers'].flatMap(kk=>S.drafts[kk].filter((x,j)=>!(kk===kind&&j===i)))];
+  if(!p.name.trim()) e[`${k}-name`]='Enter a name';
+  const ph=p.phone.trim();
+  if(!ph) e[`${k}-phone`]='Enter a phone number';
+  else if(!PHONE.test(ph)) e[`${k}-phone`]='Start with + and the country code, like +256';
+  else{const dup=others.find(x=>x.phone&&norm(x.phone)===norm(ph));if(dup) e[`${k}-phone`]=`${esc(dup.name||'Someone')} already uses this number`;}
+  if(!p.district.trim()) e[`${k}-district`]='Enter a district';
+  return e;
+}
+function validateDrafts(){
+  const e={};const all=[...S.trainers,...S.teachers];const norm=x=>x.replace(/[\s-]/g,'');
+  for(const kind of ['trainers','teachers']){
+    S.drafts[kind]=S.drafts[kind].filter(p=>[p.name,p.phone,p.district,p.school,p.subjects].some(v=>v.trim()));
+    S.drafts[kind].forEach((p,i)=>{const k=`d-${kind}-${i}`;
+      if(!p.name.trim()) e[`${k}-name`]='Enter a name';
+      const ph=p.phone.trim();
+      if(!ph) e[`${k}-phone`]='Enter a phone number';
+      else if(!PHONE.test(ph)) e[`${k}-phone`]='Start with + and the country code, like +256';
+      else{const dup=all.find(x=>norm(x.phone)===norm(ph));if(dup) e[`${k}-phone`]=`${esc(dup.name)} already uses this number`;}
+      if(!p.district.trim()) e[`${k}-district`]='Enter a district';
+      all.push(p);
+    });
+  }
+  const n=Object.keys(e).length;if(n) e.summary=`${plural(n,'thing')} to fix in the people you added.`;
+  return e;
 }
 function scrW3Manual(){
   const m=S.manual,e=S.errors;
@@ -453,7 +507,7 @@ function scrW4(){
   const sections=[];
   // Ungrouped
   const uAll=ordered.filter(t=>!t.group),uList=uAll.filter(match);
-  if(!q||uList.length) sections.push(`<table class="sect">${cols}<thead><tr class="secthead"><td colspan="5"><h2 class="h4">Ungrouped <span class="ann">(${uAll.length})</span></h2></td></tr>
+  if(!q||uList.length) sections.push(`<table class="sect" id="sec-u">${cols}<thead><tr class="secthead"><td colspan="5"><h2 class="h4">Ungrouped <span class="ann">(${uAll.length})</span></h2></td></tr>
     ${uList.length?colHead('u',uList):''}</thead><tbody>${uList.length?uList.map(rowHtml).join(''):`<tr><td colspan="5" class="ann emptyrow">Everyone is in a group.</td></tr>`}</tbody></table>`);
   // Groups
   for(const g of S.groups){
@@ -464,7 +518,7 @@ function scrW4(){
       :`<div class="row" style="gap:6px"><h2 class="h4">${esc(g.name)} <span class="ann">(${all.length}/${MAX})</span></h2>
          <button class="iconbtn" title="Rename (updates every Group dropdown)" data-act="rename" data-g="${g.id}">${I('edit','sm')}</button>
          ${all.length===0&&S.groups.length>1?`<button class="iconbtn" title="Remove ${esc(g.name)}" data-act="rmGroup" data-g="${g.id}">${I('del','sm')}</button>`:''}</div>`;
-    sections.push(`<table class="sect">${cols}<thead><tr class="secthead"><td colspan="3">${title}</td>
+    sections.push(`<table class="sect" id="sec-${g.id}">${cols}<thead><tr class="secthead"><td colspan="3">${title}</td>
       <td>${selectField('tr-'+g.id,'Trainer',g.trainer||'',trainerOpts,{ph:'Choose trainer',act:'setTrainer'})}</td><td></td></tr>
       ${list.length?colHead(g.id,list):''}</thead>
       <tbody>${list.length?list.map(rowHtml).join(''):`<tr><td colspan="5" class="ann emptyrow">No teachers yet. Choose “${esc(g.name)}” for a teacher above to move them here.</td></tr>`}</tbody></table>`);
@@ -473,7 +527,7 @@ function scrW4(){
       return `<button data-act="bulkMove" data-g="${g.id}" ${dis||need===0?'disabled':''}><span>${esc(g.name)}</span><span class="cap">${left?plural(left,'spot')+' left':'Group full'}</span></button>`}).join('')}
       <button data-act="bulkMove" data-g="">Remove from group</button></div>`:'';
   const u=uAll.length;
-  const main=`<div class="page stack">
+  const main=`<div class="page narrow stack">
     <div><div class="row"><h1 class="h3">Build WhatsApp groups</h1><span class="spacer"></span>
       <button class="btn primary" data-act="openAuto" ${u?'':'disabled'} title="${u?'':'Every teacher is already in a group'}">Auto-group</button></div>
       <p class="ann">Up to ${MAX} teachers per group. Choose a group for each teacher and they move into that group’s section.</p></div>
@@ -483,14 +537,15 @@ function scrW4(){
     <div class="filter">${I('search','sm')}<input id="filter" placeholder="Search teachers…" value="${esc(S.filter)}" data-model="filter">${S.filter?`<button class="iconbtn" data-act="clearFilter" title="Clear">${I('close','sm')}</button>`:''}</div>
     ${sections.length?sections.join(''):`<p class="ann" style="text-align:center;padding:32px">No teachers match “${esc(S.filter)}”</p>`}
     <div><button class="btn flat" data-act="addGroup">${I('add','sm')}ADD A GROUP</button></div></div>`;
-  return wizard(main,{contDisabled:issues().length>0});
+  const toc=`<nav class="toc" aria-label="Jump to a group">${S.groups.map(g=>`<a href="#sec-${g.id}" data-act="jump" data-g="${g.id}">${esc(g.name)} <span class="ann">(${members(g.id).length}/${MAX})</span></a>`).join('')}</nav>`;
+  return wizard(main+toc,{contDisabled:issues().length>0});
 }
 function scrW4c(){
   const cards=S.groups.map(g=>{const m=members(g.id);const tr=S.trainers.find(t=>t.id===g.trainer);
     return `<section class="gcard"><div class="row" style="gap:6px;align-items:baseline"><h2 class="h5">${esc(g.name)}</h2><span class="ann">(${m.length}/${MAX})</span></div>
       <div class="cap" style="margin-top:2px">Trainer: <span style="color:var(--text)">${esc(tr?.name||'None')}</span></div>
       <ol>${m.map(t=>`<li><div><span>${esc(t.name)}</span><span class="ann">${esc(t.district)}</span></div></li>`).join('')}</ol></section>`}).join('');
-  return wizard(`<div class="page stack"><div><h1 class="h3">Review groups before creating them</h1><p class="ann">These groups will be set up on WhatsApp. Invites go out when you launch the program.</p></div>
+  return wizard(`<div class="page narrow stack"><div><h1 class="h3">Review groups before creating them</h1><p class="ann">These groups will be set up on WhatsApp. Invites go out when you launch the program.</p></div>
     <div class="alert info">${I('info')}<div>After creating, you can still move teachers and rename groups. Deleting a group removes it on WhatsApp for everyone.</div></div>
     <div class="gcards">${cards}</div></div>`,{cont:'Create groups',contAct:'createGroups'});
 }
@@ -514,6 +569,7 @@ function render(){
   document.querySelectorAll('[data-change=selSection]').forEach(sa=>{const vis=[...sa.closest('table').querySelectorAll('[data-change=selOne]')];const c=vis.filter(x=>x.checked).length;sa.indeterminate=c>0&&c<vis.length});
   if(fid){const el=document.getElementById(fid);if(el){el.focus();try{if(ss!=null)el.setSelectionRange(ss,se)}catch(e){}}}
   if(S.modal){const m=document.querySelector('.modal [data-focus]');if(m&&!fid)m.focus()}
+  tocSync();
 }
 function modalHtml(){
   if(S.modal==='auto'){const u=ungrouped().length;
@@ -579,7 +635,10 @@ const A={
     if(S.screen==='w1'){if(!S.program.name.trim()){S.errors={name:'Enter a program name'};render();document.getElementById('f-name')?.focus();return}go('w2')}
     else if(S.screen==='w2') go('w3');
     else if(S.screen==='w3'){
-      if(S.method==='upload'){if(S.uploadState!=='done'){S.errors={file:'Upload a file to continue.'};render();return}}
+      if(S.method==='upload'){if(S.uploadState!=='done'){S.errors={file:'Upload a file to continue.'};render();return}
+        ['trainers','teachers'].forEach(k=>S.drafts[k]=S.drafts[k].filter(p=>[p.name,p.phone,p.district,p.school,p.subjects].some(v=>v.trim())));
+        const pending=S.drafts.trainers.length+S.drafts.teachers.length;
+        if(pending){S.errors={summary:`Finish adding ${pending===1?'the person':'the people'} you started, or cancel.`};render();document.querySelector('.alert.error')?.scrollIntoView({block:'center'});return}}
       else{const e=validateManual();if(Object.keys(e).length){S.errors=e;render();return}
         S.trainers=S.manual.trainers.map(p=>({...p}));S.teachers=S.manual.teachers.map(p=>({...p,group:null}));}
       setupGroupsStep();go('w4');
@@ -588,7 +647,14 @@ const A={
   },
   upload(){S.fileName='tororo_roster.xlsx';S.uploadState='loading';S.errors={};render();
     setTimeout(()=>{S.trainers=ROSTER_TRAINERS.map(r=>person([...r,SCHOOLS[r[2]][0],''])); S.teachers=ROSTER_TEACHERS.map((r,i)=>person(withMeta(r,i)));S.uploadState='done';render()},900)},
-  replaceFile(){A.upload()},
+  replaceFile(){S.drafts={trainers:[],teachers:[]};A.upload()},
+  addDraft(el){const k=el.dataset.kind;S.drafts[k].push(person(['','','']));render();document.getElementById(`d-${k}-${S.drafts[k].length-1}-name`)?.focus()},
+  confirmDraft(el){const kind=el.dataset.kind,i=+el.dataset.i;const e=validateDraft(kind,i);
+    if(Object.keys(e).length){S.errors=e;render();return}
+    const p=S.drafts[kind].splice(i,1)[0];p.name=p.name.trim();p.phone=p.phone.trim();p.district=p.district.trim();p.school=p.school.trim();p.subjects=p.subjects.trim();
+    (kind==='trainers'?S.trainers:S.teachers).push({...p,group:null});S.errors={};snack(`${p.name} added`);render()},
+  jump(el,e){e.preventDefault();document.getElementById('sec-'+el.dataset.g)?.scrollIntoView({behavior:'smooth',block:'start'})},
+  rmDraft(el){S.drafts[el.dataset.kind].splice(+el.dataset.i,1);S.errors={};render()},
   tpl(){snack('Template downloads aren’t part of this prototype.');render()},
   addPerson(el){S.manual[el.dataset.kind].push(person(['','','']));render();const i=S.manual[el.dataset.kind].length-1;document.getElementById(`${el.dataset.kind}-${i}-name`)?.focus()},
   rmPerson(el){S.manual[el.dataset.kind].splice(+el.dataset.i,1);S.errors={};render()},
@@ -655,6 +721,10 @@ document.addEventListener('input',e=>{const el=e.target;if(el.dataset.model){set
   if(el.dataset.model==='filter'||el.dataset.model==='renameVal'){if(el.dataset.model==='renameVal')S.renameErr='';else render()}
   else if(S.errors&&Object.keys(S.errors).length){const k=el.id;if(S.errors[k]||S.errors.name&&k==='f-name'){delete S.errors[k];if(k==='f-name')delete S.errors.name;render()}}}});
 document.addEventListener('change',e=>{const el=e.target;if(el.dataset.change)CH[el.dataset.change]?.(el);else if(el.dataset.model&&el.tagName==='SELECT'){setPath(el.dataset.model,el.value);render()}});
+function tocSync(){const links=[...document.querySelectorAll('.toc a')];if(!links.length)return;
+  let cur=null;for(const a of links){const t=document.getElementById(a.getAttribute('href').slice(1));if(t&&t.getBoundingClientRect().top<=140)cur=a}
+  links.forEach(a=>a.classList.toggle('on',a===cur))}
+window.addEventListener('scroll',tocSync,{passive:true});
 document.addEventListener('keydown',e=>{
   if(e.target.dataset?.key==='rename'){if(e.key==='Enter')A.saveRename();if(e.key==='Escape'){S.renaming=null;render()}}
   if(e.key==='Escape'&&S.modal){S.modal=null;render()}
