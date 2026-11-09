@@ -369,6 +369,672 @@ function scrW1(){
   return wizard(`<div class="page narrow stack">
     <div><p class="cap">About this program</p><h1 class="h3">Program details</h1><p class="ann">Start with the basics. Nothing is sent to anyone until you launch the program.</p></div>
     ${field('f-name','Program name',p.name,{err:e.name,model:'program.name'})}
+    ${field('f-partner','Organization name',p.partner,{model:'program.partner'})}
+    <div>${selectField('f-lang','Language',p.language,['English','Luganda','Ateso','Swahili'].map(v=>({v,t:v})),{model:'program.language'})}<div class="help">Used for bot messages and templates</div></div>
+    <div><h2 class="h5">Reference documents (optional)</h2><p class="ann" style="margin:4px 0 12px">Frameworks and principles the bot learns from, so it speaks to teachers in a familiar way. You can add more later in the Library.</p>
+      <div class="drop"><div>Drag files here, or</div><button class="btn secondary" data-act="addDoc" ${p.docs.length>=SAMPLE_DOCS.length?'disabled':''}>CHOOSE FILES</button><div class="cap">${p.docs.length>=SAMPLE_DOCS.length?'No more sample files to add in this prototype':'PDF or Word documents'}</div></div>
+      ${docs?`<div style="margin-top:12px">${docs}</div>`:''}</div>
+  </div>`,{back:false});
+}
+function scrW2(){
+  const card=(v,title,bul)=>`<label class="opt ${S.method===v?'on':''}"><input type="radio" name="method" value="${v}" ${S.method===v?'checked':''} data-change="method">
+     <div><div class="h5">${title}</div><ul>${bul.map(b=>`<li>${b}</li>`).join('')}</ul></div></label>`;
+  return wizard(`<div class="page narrow stack">
+   <div><h1 class="h3">How would you like to add trainers and teachers?</h1><p class="ann">You can add more people later from the People tab, either way.</p></div>
+   <div class="options" role="radiogroup">
+    ${card('upload','Upload spreadsheet',['Best for a large program','Add all trainers and teachers in one file'])}
+    ${card('manual','Enter manually',['Best for a small program','Type each trainer and teacher into a form','You’ll put teachers into groups in the next step'])}
+   </div></div>`);
+}
+function scrW3Upload(){
+  let inner;
+  if(S.uploadState==='loading') inner=`<div class="loading"><div class="spinner"></div><span>Checking ${esc(S.fileName)}…</span></div>`;
+  else if(S.uploadState==='done'){
+    const dash=v=>v?esc(v):'<span class="ann">—</span>';
+    const rows=arr=>arr.map(p=>`<tr><td><div>${esc(p.name)}</div><div class="cap">${esc(p.phone)}</div></td><td>${dash(p.district)}</td><td>${dash(p.school)}</td><td>${dash(p.subjects)}</td>
+      <td style="width:48px"><button class="iconbtn" title="Edit ${esc(p.name)}" data-act="editPerson" data-id="${p.id}">${I('edit','sm')}</button></td></tr>`).join('');
+    const head='<thead><tr><th>Name</th><th>District</th><th>School</th><th>Subjects</th><th></th></tr></thead>';
+    inner=`<div class="filechip" style="border:1px solid var(--fine);border-radius:4px">${I('doc')}<div style="flex:1"><div>${esc(S.fileName)}</div><div class="cap">${plural(S.trainers.length,'trainer')} and ${plural(S.teachers.length,'teacher')} found</div></div><button class="btn flat" data-act="replaceFile">REPLACE FILE</button></div>
+     <div class="alert success">${I('ok')}<div>File uploaded successfully.</div></div>
+     <div><h2 class="h5" style="margin-bottom:8px">Trainers (${S.trainers.length})</h2><table>${head}<tbody>${rows(S.trainers)}</tbody></table></div>
+     <div><h2 class="h5" style="margin-bottom:8px">Teachers (${S.teachers.length})</h2><table>${head}<tbody>${rows(S.teachers)}</tbody></table></div>`;
+  } else {
+    inner=`<div class="drop" style="padding:40px">${I('upload')}<button class="btn primary" data-act="upload">UPLOAD A FILE</button><div class="cap">Excel (.xlsx) or CSV</div></div>
+     ${S.errors.file?`<div class="alert error">${I('err')}<div>${S.errors.file}</div></div>`:''}
+     <div><h2 class="h4">Get the template</h2><div class="row" style="margin:12px 0"><button class="btn secondary" data-act="tpl">${I('download','sm')}DOWNLOAD EXCEL TEMPLATE</button><button class="btn secondary" data-act="tpl">MAKE A COPY IN GOOGLE SHEETS</button></div>
+     <p class="ann">The template flags problems as you type.</p></div>
+     <div><h3 class="h5" style="margin-bottom:8px">One row per person</h3><table><thead><tr><th>Column</th><th>Required</th><th>Example</th><th>Notes</th></tr></thead><tbody>
+      <tr><td>Name</td><td>Yes</td><td>Grace Akello</td><td>Full name</td></tr>
+      <tr><td>Phone</td><td>Yes</td><td>+256 7XX XXX 101</td><td>Include the country code. Use a mobile number with WhatsApp.</td></tr>
+      <tr><td>District</td><td>Yes</td><td>Tororo</td><td>Choose from the list</td></tr>
+      <tr><td>School</td><td>No</td><td>Rock High School</td><td>Where they teach</td></tr>
+      <tr><td>Subjects</td><td>No</td><td>Biology, Chemistry</td><td>Separate subjects with commas</td></tr>
+      <tr><td>Trainer?</td><td>No</td><td>✓</td><td>Tick only for trainers. Leave blank for teachers.</td></tr></tbody></table></div>`;
+  }
+  const intro=S.uploadState==='done'?'Check what we found in your file. Edit anyone whose details need fixing.':'Add all trainers and teachers in one spreadsheet.';
+  return wizard(`<div class="page narrow stack"><div><h1 class="h3">Upload trainers and teachers</h1><p class="ann">${intro}</p></div>${inner}</div>`,{contDisabled:S.uploadState==='loading'});
+}
+function scrW3Manual(){
+  const m=S.manual,e=S.errors;
+  const rowsOf=(kind,arr)=>arr.map((p,i)=>`<div class="personrow">
+     ${field(`${kind}-${i}-name`,'Name',p.name,{err:e[`${kind}-${i}-name`],model:`manual.${kind}.${i}.name`})}
+     ${field(`${kind}-${i}-phone`,'Phone',p.phone,{err:e[`${kind}-${i}-phone`],model:`manual.${kind}.${i}.phone`})}
+     ${field(`${kind}-${i}-district`,'District',p.district,{model:`manual.${kind}.${i}.district`})}
+     <button class="iconbtn" title="Remove" data-act="rmPerson" data-kind="${kind}" data-i="${i}" ${arr.length<=1?'disabled style="visibility:hidden"':''}>${I('del','sm')}</button>
+     ${field(`${kind}-${i}-school`,'School (optional)',p.school,{model:`manual.${kind}.${i}.school`})}
+     <div class="span2">${field(`${kind}-${i}-subjects`,'Subjects (optional)',p.subjects,{model:`manual.${kind}.${i}.subjects`,help:'Separate subjects with commas'})}</div></div>`).join('');
+  return wizard(`<div class="page narrow stack">
+   <div><h1 class="h3">Add trainers and teachers</h1><p class="ann">Type each person’s details. Phone numbers need the country code (+256).</p></div>
+   ${e.summary?`<div class="alert error">${I('err')}<div>${e.summary}</div></div>`:''}
+   <div><div class="sectionhead"><h2 class="h4">Trainers (${m.trainers.length})</h2></div>${rowsOf('trainers',m.trainers)}
+     <button class="btn flat" data-act="addPerson" data-kind="trainers">${I('add','sm')}ADD ANOTHER TRAINER</button></div>
+   <div><div class="sectionhead"><h2 class="h4">Teachers (${m.teachers.length})</h2><span class="cap">You’ll put teachers into groups in the next step</span></div>${rowsOf('teachers',m.teachers)}
+     <button class="btn flat" data-act="addPerson" data-kind="teachers">${I('add','sm')}ADD ANOTHER TEACHER</button></div>
+  </div>`);
+}
+function scrW4(){
+  const q=S.filter.trim().toLowerCase();
+  const match=t=>!q||(t.name+' '+t.phone+' '+t.district).toLowerCase().includes(q);
+  const ordered=S.order.map(id=>S.teachers.find(t=>t.id===id)).filter(Boolean);
+  const sel=S.selected.size;
+  const sortBtn=(k,l)=>`<button class="sorth ${S.sort.key===k?'on':''}" data-act="sort" data-k="${k}">${l}${I(S.sort.key===k?(S.sort.dir>0?'caret':'up'):'sort','sm')}</button>`;
+  const groupOpts=t=>S.groups.map(g=>{const full=placesLeft(g.id)<=0&&t.group!==g.id;return {v:g.id,t:g.name+(full?' (full)':''),dis:full}});
+  const trainerOpts=S.trainers.map(t=>({v:t.id,t:t.name}));
+  const rowHtml=t=>`<tr class="${S.selected.has(t.id)?'sel':''} ${S.flash===t.id?'flash':''}">
+     <td class="cb"><input type="checkbox" aria-label="Select ${esc(t.name)}" data-change="selOne" data-id="${t.id}" ${S.selected.has(t.id)?'checked':''}></td>
+     <td><div>${esc(t.name)}</div><div class="cap">${esc(t.phone)}</div></td>
+     <td>${esc(t.district)}</td>
+     <td>${selectField('gsel-'+t.id,'Group',t.group||'',groupOpts(t),{ph:'Choose group',compact:true,act:'setGroup'})}</td>
+     <td class="ed"><button class="iconbtn" title="Edit ${esc(t.name)}" data-act="editPerson" data-id="${t.id}">${I('edit','sm')}</button></td></tr>`;
+  const colHead=(secKey,list)=>{const n=list.filter(t=>S.selected.has(t.id)).length;
+    return `<tr class="colhead"><th class="cb"><input type="checkbox" aria-label="Select all in this section" data-change="selSection" data-sec="${secKey}" ${list.length&&n===list.length?'checked':''} ${list.length?'':'disabled'}></th>
+      <th>${sortBtn('name','Name')}</th><th>${sortBtn('district','District')}</th><th>Group</th><th class="ed"></th></tr>`};
+  const cols='<colgroup><col style="width:48px"><col><col><col style="width:32%"><col style="width:56px"></colgroup>';
+  const sections=[];
+  // Ungrouped
+  const uAll=ordered.filter(t=>!t.group),uList=uAll.filter(match);
+  if(!q||uList.length) sections.push(`<table class="sect">${cols}<thead><tr class="secthead"><td colspan="5"><h2 class="h4">Ungrouped <span class="ann">(${uAll.length})</span></h2></td></tr>
+    ${uList.length?colHead('u',uList):''}</thead><tbody>${uList.length?uList.map(rowHtml).join(''):`<tr><td colspan="5" class="ann emptyrow">Everyone is in a group.</td></tr>`}</tbody></table>`);
+  // Groups
+  for(const g of S.groups){
+    const all=ordered.filter(t=>t.group===g.id),list=all.filter(match);
+    if(q&&!list.length) continue;
+    const title=S.renaming===g.id
+      ?`<div class="rename"><input id="rename-${g.id}" value="${esc(S.renameVal)}" data-model="renameVal" data-key="rename" aria-label="Group name"> <button class="btn flat" data-act="saveRename">SAVE</button>${S.renameErr?`<div class="errtext" style="margin-left:0">${S.renameErr}</div>`:''}</div>`
+      :`<div class="row" style="gap:6px"><h2 class="h4">${esc(g.name)} <span class="ann">(${all.length}/${MAX})</span></h2>
+         <button class="iconbtn" title="Rename (updates every Group dropdown)" data-act="rename" data-g="${g.id}">${I('edit','sm')}</button>
+         ${all.length===0&&S.groups.length>1?`<button class="iconbtn" title="Remove ${esc(g.name)}" data-act="rmGroup" data-g="${g.id}">${I('del','sm')}</button>`:''}</div>`;
+    sections.push(`<table class="sect">${cols}<thead><tr class="secthead"><td colspan="3">${title}</td>
+      <td>${selectField('tr-'+g.id,'Trainer',g.trainer||'',trainerOpts,{ph:'Choose trainer',act:'setTrainer'})}</td><td></td></tr>
+      ${list.length?colHead(g.id,list):''}</thead>
+      <tbody>${list.length?list.map(rowHtml).join(''):`<tr><td colspan="5" class="ann emptyrow">No teachers yet. Choose “${esc(g.name)}” for a teacher above to move them here.</td></tr>`}</tbody></table>`);
+  }
+  const menu=S.menuOpen?`<div class="menu">${S.groups.map(g=>{const need=[...S.selected].filter(id=>S.teachers.find(t=>t.id===id).group!==g.id).length;const left=placesLeft(g.id);const dis=need>left;
+      return `<button data-act="bulkMove" data-g="${g.id}" ${dis||need===0?'disabled':''}><span>${esc(g.name)}</span><span class="cap">${left?plural(left,'spot')+' left':'Group full'}</span></button>`}).join('')}
+      <button data-act="bulkMove" data-g="">Remove from group</button></div>`:'';
+  const u=uAll.length;
+  const main=`<div class="page stack">
+    <div><div class="row"><h1 class="h3">Build WhatsApp groups</h1><span class="spacer"></span>
+      <button class="btn primary" data-act="openAuto" ${u?'':'disabled'} title="${u?'':'Every teacher is already in a group'}">Auto-group</button></div>
+      <p class="ann">Up to ${MAX} teachers per group. Choose a group for each teacher and they move into that group’s section.</p></div>
+    <div class="selbar"><span class="h5">${plural(S.teachers.length,'teacher')} &nbsp;|&nbsp; ${u} ungrouped</span><span class="spacer"></span>
+      ${sel?`<span>${sel} selected</span><button class="btn flat" data-act="clearSel">CLEAR</button>`:'<span class="ann">Select teachers to move several at once</span>'}
+      <div class="menuwrap"><button class="btn secondary" data-act="toggleMenu" ${sel?'':'disabled'}>MOVE TO GROUP ${I('caret','sm')}</button>${menu}</div></div>
+    <div class="filter">${I('search','sm')}<input id="filter" placeholder="Search teachers…" value="${esc(S.filter)}" data-model="filter">${S.filter?`<button class="iconbtn" data-act="clearFilter" title="Clear">${I('close','sm')}</button>`:''}</div>
+    ${sections.length?sections.join(''):`<p class="ann" style="text-align:center;padding:32px">No teachers match “${esc(S.filter)}”</p>`}
+    <div><button class="btn flat" data-act="addGroup">${I('add','sm')}ADD A GROUP</button></div></div>`;
+  return wizard(main,{contDisabled:issues().length>0});
+}
+function scrW4c(){
+  const cards=S.groups.map(g=>{const m=members(g.id);const tr=S.trainers.find(t=>t.id===g.trainer);
+    return `<section class="gcard"><div class="row" style="gap:6px;align-items:baseline"><h2 class="h5">${esc(g.name)}</h2><span class="ann">(${m.length}/${MAX})</span></div>
+      <div class="cap" style="margin-top:2px">Trainer: <span style="color:var(--text)">${esc(tr?.name||'None')}</span></div>
+      <ol>${m.map(t=>`<li><div><span>${esc(t.name)}</span><span class="ann">${esc(t.district)}</span></div></li>`).join('')}</ol></section>`}).join('');
+  return wizard(`<div class="page stack"><div><h1 class="h3">Review groups before creating them</h1><p class="ann">These groups will be set up on WhatsApp. Invites go out when you launch the program.</p></div>
+    <div class="alert info">${I('info')}<div>After creating, you can still move teachers and rename groups. Deleting a group removes it on WhatsApp for everyone.</div></div>
+    <div class="gcards">${cards}</div></div>`,{cont:'Create groups',contAct:'createGroups'});
+}
+function scrDone(){
+  return `<div class="appbar yellow"><div class="title">${I('menu')}${esc(S.program.name)}</div><span class="role">Admin</span></div>
+   <div class="content"><div class="page" style="min-height:480px"><h1 class="h3">Admin UI (in progress)</h1>
+   <p class="ann" style="margin-top:8px">This is where the prototype ends. The program overview is still being designed.</p>
+   <div style="margin-top:24px"><button class="btn secondary" data-act="restart">RESTART PROTOTYPE</button></div></div></div>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const a=document.activeElement,fid=a&&a.id,ss=a&&a.selectionStart,se=a&&a.selectionEnd;
+  const pnl=document.getElementById('panel'),pst=pnl?pnl.scrollTop:0;
+  const map={programs:scrPrograms,w1:scrW1,w2:scrW2,w3:()=>S.method==='upload'?scrW3Upload():scrW3Manual(),w4:scrW4,w4c:scrW4c,done:scrDone};
+  let html=map[S.screen]();
+  if(S.snackbar){const nb=S.screen==='programs'||S.screen==='done';html+=`<div class="snackbar ${nb?'nobar':''}" role="status"><span>${esc(S.snackbar.text)}</span>${S.snackbar.undo?'<button class="btn" data-act="undo">UNDO</button>':''}<button class="btn" data-act="dismiss">DISMISS</button></div>`}
+  if(S.modal) html+=modalHtml();
+  document.getElementById('app').innerHTML=html;
+  const p2=document.getElementById('panel'); if(p2) p2.scrollTop=pst;
+  document.querySelectorAll('[data-change=selSection]').forEach(sa=>{const vis=[...sa.closest('table').querySelectorAll('[data-change=selOne]')];const c=vis.filter(x=>x.checked).length;sa.indeterminate=c>0&&c<vis.length});
+  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{if(ss!=null)el.setSelectionRange(ss,se)}catch(e){}}}
+  if(S.modal){const m=document.querySelector('.modal [data-focus]');if(m&&!fid)m.focus()}
+}
+function modalHtml(){
+  if(S.modal==='auto'){const u=ungrouped().length;
+    return `<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 class="h4" id="mt">Auto-group teachers</h2>
+      <p style="margin-top:12px">Place ${u===S.teachers.length?'all '+u:'the '+u+' ungrouped'} teacher${u===1?'':'s'} in groups of up to ${MAX}. You can move anyone afterwards.</p>
+      <div style="margin-top:16px"><label class="chk"><input type="checkbox" data-change="autoDistrict" ${S.autoByDistrict?'checked':''}> Group by district</label><div class="cap" style="margin:2px 0 0 26px">One district per group. Adds groups if needed.</div></div>
+      <p class="cap" style="margin:12px 0 0">${(()=>{const p=autoPreview();return `This will make ${plural(p.n,'group')}`+(p.added>0?` (${p.added} new)`:'')+'.'})()}</p>
+      <div class="actions"><button class="btn flat" data-act="closeModal">GROUP MANUALLY</button><button class="btn primary" data-act="runAuto" data-focus>Auto-group</button></div></div></div>`}
+  if(S.modal==='edit'){const d=S.edit,e=d.errors||{};
+    const inW4=S.screen==='w4';
+    return `<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" style="width:560px"><h2 class="h4" id="mt">Edit details</h2>
+      <div class="stack" style="margin-top:16px">
+      ${field('e-name','Name',d.name,{err:e.name,model:'edit.name'})}
+      ${field('e-phone','Phone',d.phone,{err:e.phone,model:'edit.phone',help:'Include the country code, like +256'})}
+      ${field('e-district','District',d.district,{err:e.district,model:'edit.district'})}
+      ${field('e-school','School (optional)',d.school,{model:'edit.school'})}
+      ${field('e-subjects','Subjects (optional)',d.subjects,{model:'edit.subjects',help:'Separate subjects with commas'})}
+      <div><div class="cap" style="margin-bottom:8px">Role</div><div class="row">
+        <label class="chk"><input type="radio" name="erole" value="teacher" data-change="editRole" ${d.role==='teacher'?'checked':''}> Teacher</label>
+        <label class="chk"><input type="radio" name="erole" value="trainer" data-change="editRole" ${d.role==='trainer'?'checked':''}> Trainer</label></div>
+        ${d.role!==d.orig?`<div class="help" style="margin-left:0">${d.role==='trainer'?(inW4&&d.group?`They’ll be taken out of ${esc(gName(d.group))} and can be chosen as a group’s trainer.`:'They can be chosen as a group’s trainer.'):'They’ll be listed with the teachers, ready to put in a group.'}</div>`:''}</div>
+      </div>
+      <div class="actions"><button class="btn flat" data-act="closeModal">CANCEL</button><button class="btn primary" data-act="saveEdit" data-focus>SAVE</button></div></div></div>`}
+  if(S.modal==='delete') return `<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 class="h4" id="mt">Delete this draft?</h2>
+      <p style="margin-top:12px">“${esc(S.program.name||'Untitled program')}” and everything added so far will be deleted. You can’t undo this.</p>
+      <div class="actions"><button class="btn flat" data-act="closeModal" data-focus>CANCEL</button><button class="btn primary" data-act="deleteDraft">Delete draft</button></div></div></div>`;
+  return '';
+}
+
+/* ---------- validation ---------- */
+const PHONE=/^\+\d{1,3}[\s-]?[\dX][\dX\s-]{5,}$/i; // X allowed so masked sample numbers stay valid
+function validateManual(){
+  const e={};const all=[];
+  for(const kind of ['trainers','teachers']){
+    S.manual[kind]=S.manual[kind].filter((p,i,a)=>[p.name,p.phone,p.district,p.school,p.subjects].some(v=>v.trim())||a.length===1);
+    S.manual[kind].forEach((p,i)=>{
+      if(!p.name.trim()) e[`${kind}-${i}-name`]='Enter a name';
+      const ph=p.phone.trim();
+      if(!ph) e[`${kind}-${i}-phone`]='Enter a phone number';
+      else if(!PHONE.test(ph)) e[`${kind}-${i}-phone`]='Start with + and the country code, like +256';
+      else{const dup=all.find(x=>x.phone.replace(/\s/g,'')===ph.replace(/\s/g,''));if(dup) e[`${kind}-${i}-phone`]=`${esc(dup.name)} already uses this number`;}
+      all.push(p);
+    });
+  }
+  const n=Object.keys(e).length;
+  if(n) e.summary=`${plural(n,'thing')} to fix before you continue.`;
+  return e;
+}
+
+/* ---------- actions ---------- */
+const A={
+  start(){S.program={name:'',partner:'',language:'English',docs:[]};go('w1')},
+  saveExit(){S.draft={screen:S.screen};S.menuOpen=false;snack('Draft saved. You can continue setup any time.');go('programs')},
+  resume(){go(S.draft.screen)},
+  askDelete(){openModal('delete')},
+  deleteDraft(){const keep=S.snackbar;S=fresh();S.modal=null;snack('Draft deleted');render()},
+  closeModal(){S.modal=null;render()},
+  restart(){S=fresh();render()},
+  addDoc(){const next=SAMPLE_DOCS.find(d=>!S.program.docs.includes(d));if(next)S.program.docs.push(next);render()},
+  rmDoc(el){S.program.docs.splice(+el.dataset.i,1);render()},
+  back(){const prev={w2:'w1',w3:'w2',w4:'w3',w4c:'w4'}[S.screen];go(prev)},
+  next(){
+    if(S.screen==='w1'){if(!S.program.name.trim()){S.errors={name:'Enter a program name'};render();document.getElementById('f-name')?.focus();return}go('w2')}
+    else if(S.screen==='w2') go('w3');
+    else if(S.screen==='w3'){
+      if(S.method==='upload'){if(S.uploadState!=='done'){S.errors={file:'Upload a file to continue.'};render();return}}
+      else{const e=validateManual();if(Object.keys(e).length){S.errors=e;render();return}
+        S.trainers=S.manual.trainers.map(p=>({...p}));S.teachers=S.manual.teachers.map(p=>({...p,group:null}));}
+      setupGroupsStep();go('w4');
+    }
+    else if(S.screen==='w4') go('w4c');
+  },
+  upload(){S.fileName='tororo_roster.xlsx';S.uploadState='loading';S.errors={};render();
+    setTimeout(()=>{S.trainers=ROSTER_TRAINERS.map(r=>person([...r,SCHOOLS[r[2]][0],''])); S.teachers=ROSTER_TEACHERS.map((r,i)=>person(withMeta(r,i)));S.uploadState='done';render()},900)},
+  replaceFile(){A.upload()},
+  tpl(){snack('Template downloads aren’t part of this prototype.');render()},
+  addPerson(el){S.manual[el.dataset.kind].push(person(['','','']));render();const i=S.manual[el.dataset.kind].length-1;document.getElementById(`${el.dataset.kind}-${i}-name`)?.focus()},
+  rmPerson(el){S.manual[el.dataset.kind].splice(+el.dataset.i,1);S.errors={};render()},
+  sort(el){const k=el.dataset.k;S.sort=S.sort.key===k?{key:k,dir:-S.sort.dir}:{key:k,dir:1};computeOrder();render()},
+  clearSel(){S.selected.clear();S.menuOpen=false;render()},
+  clearFilter(){S.filter='';render()},
+  toggleMenu(){S.menuOpen=!S.menuOpen;render()},
+  bulkMove(el){const gid=el.dataset.g||null;const snap=snapshot();const ids=[...S.selected];
+    ids.forEach(id=>{S.teachers.find(t=>t.id===id).group=gid});
+    snack(gid?`${plural(ids.length,'teacher')} moved to ${gName(gid)}`:`${plural(ids.length,'teacher')} removed from their group`,()=>restore(snap));
+    S.selected.clear();S.menuOpen=false;render()},
+  openAuto(){openModal('auto')},
+  editPerson(el){const id=el.dataset.id;const tr=S.trainers.find(p=>p.id===id);const p=tr||S.teachers.find(x=>x.id===id);
+    S.edit={id,orig:tr?'trainer':'teacher',role:tr?'trainer':'teacher',name:p.name,phone:p.phone,district:p.district,school:p.school||'',subjects:p.subjects||'',group:p.group,errors:{}};openModal('edit')},
+  saveEdit(){const d=S.edit,e={};
+    if(!d.name.trim()) e.name='Enter a name';
+    const ph=d.phone.trim();
+    if(!ph) e.phone='Enter a phone number';
+    else if(!PHONE.test(ph)) e.phone='Start with + and the country code, like +256';
+    else{const dup=[...S.trainers,...S.teachers].find(x=>x.id!==d.id&&x.phone.replace(/[\s-]/g,'')===ph.replace(/[\s-]/g,''));if(dup) e.phone=`${esc(dup.name)} already uses this number`;}
+    if(!d.district.trim()) e.district='Enter a district';
+    if(Object.keys(e).length){d.errors=e;render();return}
+    const from=d.orig==='trainer'?S.trainers:S.teachers;const p=from.find(x=>x.id===d.id);
+    Object.assign(p,{name:d.name.trim(),phone:ph,district:d.district.trim(),school:d.school.trim(),subjects:d.subjects.trim()});
+    let msg=`${p.name}’s details saved`;
+    if(d.role!==d.orig){
+      from.splice(from.indexOf(p),1);
+      if(d.role==='trainer'){p.group=null;S.trainers.push(p);S.selected.delete(p.id);msg=`${p.name} is now a trainer`}
+      else{S.groups.forEach(g=>{if(g.trainer===p.id)g.trainer=null});p.group=null;S.teachers.push(p);msg=`${p.name} is now a teacher`}
+      if(S.screen==='w4'){S.groupsBuiltFor=S.teachers.map(t=>t.id).join();fillTrainers();computeOrder()}
+    }
+    S.modal=null;S.edit=null;snack(msg);render()},
+  runAuto(){const snap=snapshot();S.autoByDistrict?autoGroupStrict():autoGroup(false);S.groups.forEach(g=>{if(g.trainerAuto)g.trainer=null});fillTrainers();S.showNames=true;S.modal=null;snack('Auto-grouping completed',()=>restore(snap));render()},
+  undo(){S.snackbar?.undo?.();S.snackbar=null;render()},
+  dismiss(){S.snackbar=null;render()},
+  addGroup(){const n=Math.max(0,...S.groups.map(g=>+(g.name.match(/^Group (\d+)$/)||[0,0])[1]))+1;S.groups.push({id:nid('g'),name:'Group '+n,trainer:null});fillTrainers();render();const p=document.getElementById('panel');if(p)p.scrollTop=p.scrollHeight},
+  rmGroup(el){const snap=snapshot();const g=S.groups.find(x=>x.id===el.dataset.g);S.groups=S.groups.filter(x=>x!==g);snack(`${g.name} removed`,()=>restore(snap));render()},
+  rename(el){const g=S.groups.find(x=>x.id===el.dataset.g);S.renaming=g.id;S.renameVal=g.name;S.renameErr='';render();const i=document.getElementById('rename-'+g.id);if(i){i.focus();i.select()}},
+  saveRename(){const v=S.renameVal.trim();if(!v){S.renameErr='Enter a group name';render();return}
+    if(S.groups.some(g=>g.id!==S.renaming&&g.name.toLowerCase()===v.toLowerCase())){S.renameErr='Another group already has this name';render();return}
+    S.groups.find(g=>g.id===S.renaming).name=v;S.renaming=null;render()},
+  createGroups(){const n=S.groups.length;S.draft=null;snack(`${plural(n,'group')} created`);go('done')}
+};
+const CH={
+  method(el){S.method=el.value;render()},
+  selOne(el){el.checked?S.selected.add(el.dataset.id):S.selected.delete(el.dataset.id);render()},
+  selSection(el){const ids=[...el.closest('table').querySelectorAll('[data-change=selOne]')].map(x=>x.dataset.id);ids.forEach(id=>el.checked?S.selected.add(id):S.selected.delete(id));render()},
+  setGroup(el){const t=S.teachers.find(x=>'gsel-'+x.id===el.id);const snap=snapshot();const old=t.group;t.group=el.value||null;
+    snack(t.group?`${t.name} moved to ${gName(t.group)}`:`${t.name} moved to Ungrouped`,()=>restore(snap));S.flash=t.id;render();S.flash=null},
+  setTrainer(el){const g=S.groups.find(x=>'tr-'+x.id===el.id);g.trainer=el.value||null;g.trainerAuto=false;render()},
+  showNames(el){S.showNames=el.checked;render()},
+  autoDistrict(el){S.autoByDistrict=el.checked;render()},
+  editRole(el){S.edit.role=el.value;render()}
+};
+function setPath(path,val){const k=path.split('.');let o=S;for(let i=0;i<k.length-1;i++)o=o[k[i]];o[k.at(-1)]=val}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');
+  if(S.menuOpen&&!e.target.closest('.menuwrap')){S.menuOpen=false;if(!el){render();return}}
+  if(!el||el.disabled)return;
+  if(S.renaming&&el.dataset.act!=='saveRename'&&el.dataset.act!=='rename'){S.renaming=null}
+  A[el.dataset.act]?.(el,e);
+});
+document.addEventListener('input',e=>{const el=e.target;if(el.dataset.model){setPath(el.dataset.model,el.value);
+  if(el.dataset.model==='filter'||el.dataset.model==='renameVal'){if(el.dataset.model==='renameVal')S.renameErr='';else render()}
+  else if(S.errors&&Object.keys(S.errors).length){const k=el.id;if(S.errors[k]||S.errors.name&&k==='f-name'){delete S.errors[k];if(k==='f-name')delete S.errors.name;render()}}}});
+document.addEventListener('change',e=>{const el=e.target;if(el.dataset.change)CH[el.dataset.change]?.(el);else if(el.dataset.model&&el.tagName==='SELECT'){setPath(el.dataset.model,el.value);render()}});
+document.addEventListener('keydown',e=>{
+  if(e.target.dataset?.key==='rename'){if(e.key==='Enter')A.saveRename();if(e.key==='Escape'){S.renaming=null;render()}}
+  if(e.key==='Escape'&&S.modal){S.modal=null;render()}
+  if(e.key==='Escape'&&S.menuOpen){S.menuOpen=false;render()}
+});
+render();
+</script>
+</body>
+</html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nectar · Create a program (prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --text:#000;--annotation:#666;--primary:#4368f5;--fine:#e6e6e6;--bg:#f5f5f5;--surface:#fff;
+  --success:#00992e;--warning:#ffcb00;--error:#d21e00;--disabled:#ccc;--blue50:#f5f7ff;--blue100:#d9e1fd;
+  --yellow400:#ffd533;--warnbg:#fff5cc;--errbg:#ffd9d3;--snack:#212121;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Noto Sans',system-ui,sans-serif;font-size:14px;line-height:1.45;color:var(--text);background:var(--bg);min-width:1100px}
+h1,h2,h3,h4,p{margin:0}
+.h3{font-size:22px;font-weight:600;line-height:1.4}
+.h4{font-size:18px;font-weight:600;line-height:1.4}
+.h5{font-size:16px;font-weight:600}
+.b1{font-size:16px}
+.ann{color:var(--annotation)}
+.cap{font-size:12px;color:var(--annotation)}
+.icon{width:24px;height:24px;fill:currentColor;flex:none;display:block}
+.icon.sm{width:20px;height:20px}
+
+/* app bars */
+.appbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:20}
+.appbar.black{background:#000;color:#fff}
+.appbar.yellow{background:var(--yellow400);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.appbar .title{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:600}
+.appbar.yellow .title{font-size:16px}
+.role{font-size:14px}
+
+/* buttons */
+.btn{font:inherit;text-transform:uppercase;font-weight:600;font-size:14px;height:36px;padding:0 16px;border-radius:4px;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:focus-visible{outline:3px solid #4368f566;outline-offset:2px}
+.btn.primary{background:var(--primary);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.btn.primary:hover{background:#2e55f0}
+.btn.secondary{background:var(--bg);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.btn.secondary:hover{background:#ebebeb}
+.btn.flat{background:transparent;color:var(--primary);padding:0 8px}
+.btn.flat:hover{background:#4368f514}
+.btn.white{background:transparent;color:#fff}
+.btn.white:hover{background:#ffffff1f}
+.btn[disabled]{background:var(--fine)!important;color:#999!important;box-shadow:none!important;cursor:not-allowed}
+.btn.flat[disabled]{background:transparent!important}
+.iconbtn{background:none;border:0;padding:4px;border-radius:50%;cursor:pointer;color:var(--annotation);display:inline-flex}
+.iconbtn:hover{background:#0000000f;color:var(--text)}
+
+/* layout */
+.content{padding:32px 32px 112px}
+.content.withpanel{margin-right:400px}
+.page{background:var(--surface);border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.2);padding:32px}
+.page.narrow{max-width:960px;margin:0 auto}
+.stack>*+*{margin-top:24px}
+.row{display:flex;align-items:center;gap:16px}
+.spacer{flex:1}
+
+/* bottom bar */
+.bottombar{position:fixed;left:0;right:0;bottom:0;height:72px;background:#fff;box-shadow:0 -1px 4px rgba(0,0,0,.15);display:flex;align-items:center;padding:0 24px;gap:16px;z-index:30}
+
+/* fields */
+.field{position:relative;background:var(--bg);border-radius:4px 4px 0 0;border-bottom:1px solid var(--annotation);padding:20px 12px 5px;min-height:50px}
+.field:focus-within{border-bottom:2px solid var(--primary);padding-bottom:4px}
+.field.error{border-bottom:2px solid var(--error);padding-bottom:4px}
+.field label{position:absolute;left:12px;top:5px;font-size:12px;color:var(--annotation);pointer-events:none;transition:all .15s ease}
+.field input:placeholder-shown:not(:focus)+label{top:14px;font-size:16px}
+.field:focus-within label{color:var(--primary)}
+.field.error label{color:var(--error)}
+.field input,.field select{font:inherit;font-size:15px;border:0;background:transparent;width:100%;padding:0;outline:none;color:var(--text);appearance:none}
+.field select{cursor:pointer;padding-right:24px}
+.field .caret{position:absolute;right:6px;bottom:8px;pointer-events:none;color:var(--annotation)}
+.field select.placeholder{color:var(--annotation)}
+.help{font-size:12px;color:var(--annotation);margin:4px 12px 0}
+.errtext{font-size:12px;color:var(--error);margin:4px 12px 0}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* alerts */
+.alert{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-radius:4px}
+.alert.warning{background:var(--warnbg)} .alert.warning .icon{color:#b38f00}
+.alert.error{background:var(--errbg)} .alert.error .icon{color:var(--error)}
+.alert.info{background:rgba(33,150,243,.12)} .alert.info .icon{color:#2196f3}
+.alert.success{background:#d9f5e1} .alert.success .icon{color:var(--success)}
+.alert ul{margin:4px 0 0;padding-left:18px}
+
+/* tables */
+table{border-collapse:collapse;width:100%}
+th{font-weight:400;color:var(--annotation);text-align:left;padding:10px 12px;border-bottom:1px solid var(--fine);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--fine);vertical-align:middle}
+tr.sel td{background:var(--blue50)}
+.sorth{background:none;border:0;font:inherit;color:var(--annotation);cursor:pointer;display:inline-flex;align-items:center;gap:2px;padding:0}
+.sorth.on{color:var(--text)}
+input[type=checkbox],input[type=radio]{accent-color:var(--primary);width:18px;height:18px;margin:0;cursor:pointer}
+.chk{display:inline-flex;gap:8px;align-items:center;cursor:pointer}
+
+/* option cards */
+.options{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.opt{border:1px solid var(--fine);border-radius:4px;padding:20px 24px;display:flex;gap:16px;cursor:pointer;background:#fff}
+.opt.on{border:2px solid var(--primary);background:var(--blue50);padding:19px 23px}
+.opt ul{margin:8px 0 0;padding-left:18px;color:var(--annotation)}
+
+/* dropzone */
+.drop{border:2px dashed var(--disabled);border-radius:4px;padding:24px;display:flex;align-items:center;justify-content:center;gap:12px;flex-direction:column;text-align:center}
+.filechip{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid var(--fine)}
+
+/* side panel */
+.panel{position:fixed;right:0;top:56px;bottom:72px;width:400px;background:#fff;border-left:1px solid var(--fine);overflow-y:auto;padding:24px;z-index:10}
+.grp{padding:16px 0;border-top:1px solid var(--fine)}
+.grp:first-of-type{border-top:0}
+.slots{display:flex;gap:4px;flex:1}
+.slot{height:10px;flex:1;border-radius:2px;background:var(--fine)}
+.slot.f{background:var(--primary)}
+.member{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.rename input{font:inherit;font-weight:600;font-size:15px;border:0;border-bottom:2px solid var(--primary);background:var(--bg);padding:2px 6px;outline:none;width:180px}
+
+/* selection bar + menu */
+.selbar{background:#fafafa;border-radius:4px;padding:6px 6px 6px 16px;display:flex;align-items:center;gap:16px;min-height:52px}
+.menuwrap{position:relative}
+.menu{position:absolute;right:0;top:42px;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.25);min-width:260px;padding:6px 0;z-index:40}
+.menu button{display:flex;justify-content:space-between;gap:16px;width:100%;background:none;border:0;font:inherit;padding:10px 16px;cursor:pointer;text-align:left}
+.menu button:hover:not([disabled]){background:var(--bg)}
+.menu button[disabled]{color:#999;cursor:not-allowed}
+.filter{display:flex;align-items:center;gap:8px;border:1px solid var(--disabled);border-radius:4px;padding:0 10px;height:40px;background:#fff}
+.filter input{border:0;outline:none;font:inherit;flex:1}
+.filter:focus-within{border-color:var(--primary)}
+
+/* snackbar + modal */
+.snackbar{position:fixed;left:32px;bottom:96px;background:var(--snack);color:#fff;border-radius:4px;padding:6px 8px 6px 16px;display:flex;align-items:center;gap:16px;min-height:48px;box-shadow:0 3px 8px rgba(0,0,0,.3);z-index:50;max-width:560px}
+.snackbar.nobar{bottom:32px}
+.snackbar .btn{color:#9fb3ff;background:none;padding:0 8px}
+.backdrop{position:fixed;inset:0;background:rgba(51,51,51,.5);display:flex;align-items:center;justify-content:center;z-index:60}
+.modal{background:#fff;border-radius:4px;width:520px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.backdrop.enter{animation:fadeIn .3s ease-out}
+.backdrop.enter .modal{animation:riseIn .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px) scale(.98)}}
+.modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
+
+/* group sections */
+table.sect{table-layout:fixed;margin-top:24px}
+table.sect .cb{width:48px} table.sect .ed{width:56px}
+tr.secthead td{border-bottom:0;padding:8px 12px 4px;vertical-align:middle}
+tr.secthead .h4 .ann{font-weight:600}
+td.emptyrow{padding:16px 12px;border-top:1px solid var(--fine)}
+tr.colhead th{border-top:0}
+tr.flash td{animation:flash 1.6s ease-out}
+@keyframes flash{from{background:var(--blue100)}to{background:transparent}}
+/* review cards */
+.gcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.gcard{border:1px solid var(--fine);border-radius:4px;padding:16px 20px}
+.gcard ol{margin:12px 0 0;padding-left:22px;display:grid;gap:4px}
+.gcard li{padding-left:2px}
+.gcard li>div{display:flex;justify-content:space-between;gap:12px}
+.gcard li::marker{color:var(--annotation)}
+/* misc */
+.empty{text-align:center;padding:64px 0;display:flex;flex-direction:column;align-items:center;gap:12px}
+.empty .icon{width:48px;height:48px;color:var(--disabled)}
+.card{border:1px solid var(--fine);border-radius:4px;padding:20px 24px;display:flex;align-items:center;gap:16px}
+.pill{display:inline-block;background:var(--warnbg);border-radius:12px;padding:1px 10px;font-size:12px}
+.link{color:var(--primary);background:none;border:0;font:inherit;cursor:pointer;padding:0;text-decoration:underline}
+.loading{display:flex;align-items:center;gap:12px;padding:32px;justify-content:center}
+.spinner{width:24px;height:24px;border:3px solid var(--fine);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.personrow{display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:12px 16px;align-items:start;padding:16px 0;border-top:1px solid var(--fine)}
+.sectionhead+.personrow{border-top:0;padding-top:0}
+.personrow .span2{grid-column:span 2}
+.personrow .iconbtn{margin-top:10px}
+.sectionhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ---------- icons ---------- */
+const P={
+ close:'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
+ edit:'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+ del:'M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
+ warn:'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z',
+ ok:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+ err:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z',
+ info:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z',
+ doc:'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
+ caret:'M7 10l5 5 5-5z', up:'M7 14l5-5 5 5z',
+ sort:'M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3L5 6.99h3V14h2V6.99h3L9 3z',
+ add:'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+ upload:'M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z',
+ download:'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
+ menu:'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z',
+ search:'M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',
+ people:'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z'
+};
+const I=(n,cls='')=>`<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[n]}"/></svg>`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- sample data ---------- */
+const ROSTER_TRAINERS=[['Ruth Okot','+256 7XX XXX 201','Tororo'],['James Odongo','+256 7XX XXX 202','Tororo'],['Harriet Nabwire','+256 7XX XXX 203','Busia'],['Samuel Wandera','+256 7XX XXX 204','Butaleja'],['Lydia Namono','+256 7XX XXX 205','Mbale'],['Patrick Okiror','+256 7XX XXX 206','Pallisa']];
+const ROSTER_TEACHERS=[
+ ['Betty Akello','+256 7XX XXX 156','Busia'],['Charles Ochieng','+256 7XX XXX 166','Busia'],['Isaac Omoding','+256 7XX XXX 163','Busia'],
+ ['Simon Oketcho','+256 7XX XXX 160','Busia'],['David Ssemanda','+256 7XX XXX 104','Busia'],['Brian Opio','+256 7XX XXX 124','Busia'],
+ ['Mercy Atim','+256 7XX XXX 123','Busia'],['Rose Akurut','+256 7XX XXX 125','Busia'],
+ ['Moses Okwi','+256 7XX XXX 135','Butaleja'],['Sylvia Auma','+256 7XX XXX 162','Butaleja'],['Ruth Amoit','+256 7XX XXX 165','Butaleja'],
+ ['Ivan Ojok','+256 7XX XXX 151','Butaleja'],['Daniel Emojong','+256 7XX XXX 107','Butaleja'],['Peter Wanyama','+256 7XX XXX 136','Butaleja'],
+ ['Grace Akello','+256 7XX XXX 101','Tororo'],['Florence Adongo','+256 7XX XXX 140','Tororo'],['Joan Akongo','+256 7XX XXX 121','Tororo'],
+ ['John Ekwaru','+256 7XX XXX 161','Tororo'],['Grace Adeke','+256 7XX XXX 164','Tororo'],['Sarah Namukasa','+256 7XX XXX 102','Tororo'],
+ ['Agnes Nabirye','+256 7XX XXX 103','Tororo'],['Robert Okello','+256 7XX XXX 105','Tororo'],['Esther Achieng','+256 7XX XXX 106','Tororo'],
+ ['Paul Etyang','+256 7XX XXX 122','Tororo']
+];
+// Pad the sample roster to 112 teachers across five districts
+(function(){
+  const first=['Aisha','Alex','Annet','Benjamin','Brenda','Christine','Collins','Denis','Doreen','Edward','Eunice','Fred','Gloria','Hassan','Irene','Jacob','Janet','Joseph','Josephine','Juliet','Kenneth','Lilian','Martin','Mary','Michael','Monica','Nelson','Patience','Peace','Richard','Ronald','Ruth','Scovia','Stella','Steven','Teddy','Timothy','Vincent','Winnie','Yusuf'];
+  const last=['Wafula','Nambozo','Barasa','Opolot','Kiiza','Mukasa','Auma','Oboth','Nangobi','Egesa','Okello','Namutebi','Ochola','Akol','Mugisha','Nakato','Ojambo','Akiror','Wasike','Atuhaire','Etyang','Namusoke','Odoi','Achom','Kato','Naigaga'];
+  const used=new Set(ROSTER_TEACHERS.map(r=>r[0]));
+  const plan=[['Busia',14],['Butaleja',18],['Tororo',22],['Mbale',20],['Pallisa',14]]; // +88
+  let i=0,n=200;
+  for(const [d,count] of plan) for(let c=0;c<count;c++){
+    let name;do{name=first[(i*7)%first.length]+' '+last[(i*11+Math.floor(i/first.length))%last.length];i++}while(used.has(name));
+    used.add(name);const num=String(300+(n++)).padStart(3,'0');
+    ROSTER_TEACHERS.push([name,'+256 7XX XXX '+num.slice(-3),d]);
+  }
+  // Sample numbers are masked so no real phone number appears in the published prototype
+  ROSTER_TEACHERS.forEach((r,k)=>{if(k>=24) r[1]='+256 7XX XXX '+String(300+k)});
+})();
+const SAMPLE_DOCS=['SESEMAT reflective practice framework.pdf','Gibbs reflective cycle summary.docx','Lesson study guide.pdf','Teacher learning circles handbook.docx'];
+const MAX=7;
+let uid=1; const nid=p=>p+(uid++);
+const person=([name,phone,district,school='',subjects=''])=>({id:nid('p'),name,phone,district,school,subjects,group:null});
+const SCHOOLS={Mbale:['Mbale Secondary School','Nkoma Secondary School'],Pallisa:['Pallisa Secondary School','Kamuge High School'],Busia:['Busia Secondary School','Mundika Secondary School'],Butaleja:['Butaleja Seed Secondary School','Busolwe Secondary School'],Tororo:['Tororo Girls School','Rock High School','Tororo College']};
+const SUBJECTS=['Biology, Chemistry','Mathematics, Physics','Mathematics','Chemistry, Physics','Biology','Mathematics, Chemistry'];
+const withMeta=(r,i)=>[...r,SCHOOLS[r[2]][i%SCHOOLS[r[2]].length],SUBJECTS[i%SUBJECTS.length]];
+
+function fresh(){
+  return {
+    screen:'programs', draft:null,
+    program:{name:'',partner:'',language:'English',docs:[]},
+    method:'upload', uploadState:'empty', fileName:'',
+    trainers:[], teachers:[],
+    manual:{trainers:[person(['','',''])],teachers:[person(['','',''])]},
+    groups:[], groupsBuiltFor:null,
+    selected:new Set(), filter:'', sort:{key:'group',dir:1}, order:[], showNames:false,
+    renaming:null, renameVal:'', renameErr:'', menuOpen:false,
+    errors:{}, snackbar:null, modal:null, autoByDistrict:true, autoOnLoad:false, modalEnter:false
+  };
+}
+let S=fresh();
+
+/* ---------- helpers ---------- */
+const STEP={w1:1,w2:2,w3:3,w4:4,w4c:4};
+const gName=id=>S.groups.find(g=>g.id===id)?.name||'';
+const members=gid=>S.teachers.filter(t=>t.group===gid);
+const ungrouped=()=>S.teachers.filter(t=>!t.group);
+const placesLeft=gid=>MAX-members(gid).length;
+const list=a=>a.length<=1?a.join(''):a.slice(0,-1).join(', ')+' and '+a.at(-1);
+const plural=(n,w,ws)=>`${n} ${n===1?w:(ws||w+'s')}`;
+function snapshot(){return {groups:S.groups.map(g=>({...g})),map:Object.fromEntries(S.teachers.map(t=>[t.id,t.group]))}}
+function restore(s){S.groups=s.groups;S.teachers.forEach(t=>t.group=s.map[t.id]??null)}
+let snackTimer;
+function snack(text,undo){S.snackbar={text,undo};clearTimeout(snackTimer);snackTimer=setTimeout(()=>{S.snackbar=null;render()},undo?8000:5000)}
+function go(screen){S.screen=screen;S.errors={};S.menuOpen=false;if(S.snackbar?.undo)S.snackbar=null;window.scrollTo(0,0);render();
+  if(screen==='w4'&&S.autoOnLoad){S.autoOnLoad=false;setTimeout(()=>{if(S.screen==='w4'&&!S.modal)openModal('auto')},600)}}
+function openModal(m){S.modal=m;S.modalEnter=true;render();S.modalEnter=false}
+
+function computeOrder(){
+  const k=S.sort.key,d=S.sort.dir;
+  const gi=t=>t.group?S.groups.findIndex(g=>g.id===t.group):-1;
+  S.order=[...S.teachers].sort((a,b)=>{
+    let r=0;
+    if(k==='name') r=a.name.localeCompare(b.name);
+    else if(k==='district') r=a.district.localeCompare(b.district)||a.name.localeCompare(b.name);
+    else r=(gi(a)-gi(b))||a.name.localeCompare(b.name);
+    return r*d;
+  }).map(t=>t.id);
+}
+function issues(){
+  const out=[];const u=ungrouped().length;
+  if(u) out.push(`Put ${plural(u,'teacher')} in a group.`);
+  const noTr=S.groups.filter(g=>members(g.id).length&&!g.trainer).map(g=>g.name);
+  if(noTr.length) out.push(`Choose a trainer for ${list(noTr)}.`);
+  const emp=S.groups.filter(g=>!members(g.id).length).map(g=>g.name);
+  if(emp.length) out.push(`${list(emp)} ${emp.length>1?'have':'has'} no teachers. Add teachers or remove ${emp.length>1?'them':'it'}.`);
+  return out;
+}
+function fillTrainers(){
+  if(!S.trainers.length)return;
+  // prefer a trainer from the group's district, then whoever has the fewest groups
+  const load=t=>S.groups.filter(x=>x.trainer===t.id).length;
+  S.groups.forEach(g=>{if(!g.trainer){const d=members(g.id)[0]?.district;
+    g.trainer=[...S.trainers].sort((a,b)=>((a.district===d?0:1)-(b.district===d?0:1))*100+(load(a)-load(b)))[0].id;g.trainerAuto=true}});
+}
+function setupGroupsStep(){
+  const key=S.teachers.map(t=>t.id).join();
+  if(S.groupsBuiltFor!==key){
+    const n=Math.max(1,Math.ceil(S.teachers.length/MAX));
+    S.groups=Array.from({length:n},(_,i)=>({id:nid('g'),name:'Group '+(i+1),trainer:null}));
+    S.teachers.forEach(t=>t.group=null);
+    S.selected=new Set();S.groupsBuiltFor=key;S.sort={key:'name',dir:1};
+    fillTrainers();
+    S.autoByDistrict=true;S.showNames=false;S.autoOnLoad=true;
+  }
+  computeOrder();
+}
+function autoGroup(byDistrict){
+  const todo=ungrouped().sort((a,b)=>byDistrict?(a.district.localeCompare(b.district)||a.name.localeCompare(b.name)):a.name.localeCompare(b.name));
+  let free=S.groups.reduce((s,g)=>s+placesLeft(g.id),0);
+  while(free<todo.length){const n=S.groups.length+1;S.groups.push({id:nid('g'),name:'Group '+n,trainer:null});free+=MAX}
+  const target=Math.min(MAX,Math.ceil(S.teachers.length/S.groups.length));
+  let i=0;
+  for(const pass of [target,MAX]) for(const g of S.groups){
+    let room=pass-members(g.id).length;
+    while(room>0&&i<todo.length){todo[i++].group=g.id;room--}
+  }
+}
+
+function autoGroupStrict(){
+  const todo=ungrouped();const byD={};
+  todo.forEach(t=>(byD[t.district||'—']=byD[t.district||'—']||[]).push(t));
+  for(const d of Object.keys(byD).sort()){
+    const ppl=byD[d].sort((a,b)=>a.name.localeCompare(b.name));let i=0;
+    // top up groups that already hold only this district
+    for(const g of S.groups){const m=members(g.id);if(m.length&&m.every(t=>(t.district||'—')===d)){let room=MAX-m.length;while(room-->0&&i<ppl.length)ppl[i++].group=g.id}}
+    const r=ppl.length-i;if(!r)continue;
+    const k=Math.ceil(r/MAX),base=Math.floor(r/k),extra=r%k;
+    for(let j=0;j<k;j++){
+      let g=S.groups.find(x=>!members(x.id).length);
+      if(!g){g={id:nid('g'),name:'',trainer:null};S.groups.push(g)}
+      for(let c=0;c<base+(j<extra?1:0);c++)ppl[i++].group=g.id;
+    }
+  }
+  // drop leftover empty groups nobody has set up, then number unnamed/default groups in order
+  S.groups=S.groups.filter(g=>members(g.id).length||g.trainer||(g.name&&!/^Group \d+$/.test(g.name)));
+  let n=1;S.groups.forEach(g=>{if(!g.name||/^Group \d+$/.test(g.name)){while(S.groups.some(x=>x!==g&&x.name==='Group '+n&&!/^Group \d+$/.test(x.name)))n++;g.name='Group '+(n++)}});
+}
+function autoPreview(){const snap=snapshot();const before=S.groups.length;S.autoByDistrict?autoGroupStrict():autoGroup(false);const n=S.groups.length;restore(snap);return {n,added:n-before}}
+
+/* ---------- shells ---------- */
+function wizard(inner,{cont='Continue',contAct='next',contDisabled=false,back=true,panel=''}={}){
+  return `<div class="appbar black"><div class="title">Create a program</div>
+    <button class="btn white" data-act="saveExit">SAVE AND EXIT</button></div>
+  <div class="content ${panel?'withpanel':''}">${inner}</div>${panel}
+  <div class="bottombar"><span class="ann">Step ${STEP[S.screen]} of 4</span><span class="spacer"></span>
+    ${back?'<button class="btn secondary" data-act="back">BACK</button>':''}
+    <button class="btn primary" data-act="${contAct}" ${contDisabled?'disabled':''}>${cont}</button></div>`;
+}
+const field=(id,label,val,{err,help,type='text',model}={})=>`<div><div class="field ${err?'error':''}">
+  <input id="${id}" type="${type}" value="${esc(val)}" placeholder=" " data-model="${model||id}" autocomplete="off"><label for="${id}">${label}</label></div>
+  ${err?`<div class="errtext">${err}</div>`:help?`<div class="help">${help}</div>`:''}</div>`;
+function selectField(id,label,val,opts,{model,ph,compact=false,act}={}){
+  const o=(ph?`<option value="">${ph}</option>`:'')+opts.map(x=>`<option value="${esc(x.v)}" ${x.v===val?'selected':''} ${x.dis?'disabled':''}>${esc(x.t)}</option>`).join('');
+  return `<div class="field" style="${compact?'min-height:46px;padding-top:18px;padding-bottom:3px':''}"><label for="${id}">${label}</label>
+    <select id="${id}" class="${val?'':'placeholder'}" ${model?`data-model="${model}"`:''} ${act?`data-change="${act}"`:''}>${o}</select>
+    <span class="caret">${I('caret','sm')}</span></div>`;
+}
+
+/* ---------- screens ---------- */
+function scrPrograms(){
+  const d=S.draft;
+  const body=d?`<div class="card"><div style="flex:1"><div class="h5">${esc(S.program.name||'Untitled program')}</div>
+      <div class="row" style="gap:8px;margin-top:4px"><span class="pill">Setup in progress</span><span class="ann">Step ${STEP[d.screen]} of 4</span></div></div>
+      <button class="btn flat" data-act="askDelete">DELETE DRAFT</button><button class="btn primary" data-act="resume">Continue setup</button></div>`
+   :`<div class="empty">${I('people')}<div class="h4">No programs yet</div><button class="btn primary" data-act="start">Create a program</button></div>`;
+  return `<div class="appbar yellow"><div class="title">${I('menu')}Nectar</div><span class="role">Admin</span></div>
+   <div class="content"><div class="page stack"><div><h1 class="h3">Programs</h1><p class="ann">Each program holds its own people, groups, messages and library.</p></div>${body}</div></div>`;
+}
+function scrW1(){
+  const p=S.program,e=S.errors;
+  const docs=p.docs.map((d,i)=>`<div class="filechip">${I('doc')}<span style="flex:1">${esc(d)}</span><button class="iconbtn" title="Remove" data-act="rmDoc" data-i="${i}">${I('close','sm')}</button></div>`).join('');
+  return wizard(`<div class="page narrow stack">
+    <div><p class="cap">About this program</p><h1 class="h3">Program details</h1><p class="ann">Start with the basics. Nothing is sent to anyone until you launch the program.</p></div>
+    ${field('f-name','Program name',p.name,{err:e.name,model:'program.name'})}
     ${field('f-partner','Partner organisation',p.partner,{model:'program.partner'})}
     <div>${selectField('f-lang','Language',p.language,['English','Luganda','Ateso','Swahili'].map(v=>({v,t:v})),{model:'program.language'})}<div class="help">Used for bot messages and templates</div></div>
     <div><h2 class="h5">Reference documents (optional)</h2><p class="ann" style="margin:4px 0 12px">Frameworks and principles the bot learns from, so it speaks to teachers in a familiar way. You can add more later in the Library.</p>
