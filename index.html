@@ -42,6 +42,8 @@ h1,h2,h3,h4,p{margin:0}
 .btn.secondary:hover{background:#ebebeb}
 .btn.flat{background:transparent;color:var(--primary);padding:0 8px}
 .btn.flat:hover{background:#4368f514}
+.btn.flat.danger{color:var(--error)}
+.btn.flat.danger:hover{background:#d21e0014}
 .btn.white{background:transparent;color:#fff}
 .btn.white:hover{background:#ffffff1f}
 .btn[disabled]{background:var(--fine)!important;color:#999!important;box-shadow:none!important;cursor:not-allowed}
@@ -147,12 +149,18 @@ td.emptyrow{padding:16px 12px;border-top:1px solid var(--fine)}
 tr.colhead th{border-top:0}
 tr.flash td{animation:flash 1.6s ease-out}
 @keyframes flash{from{background:var(--blue100)}to{background:transparent}}
+/* sticky selection bar on the grouping step */
+.selbar.sticky{position:sticky;top:56px;z-index:15;transition:background .15s,box-shadow .15s}
+.selbar.sticky.stuck{background:#fff;border-radius:0}
+/* full-width white band behind the stuck bar; content stays aligned with the page */
+.selbar.sticky.stuck::before{content:"";position:absolute;top:0;bottom:0;left:-100vw;right:-100vw;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15);z-index:-1}
+html,body{overflow-x:clip}
 /* groups table of contents */
 .toc{position:fixed;top:120px;bottom:96px;left:calc(50% + 504px);width:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;z-index:5}
 .toc a{display:block;padding:6px 12px;border-left:2px solid var(--fine);color:var(--text);text-decoration:none;font-size:14px}
 .toc a:hover{background:#0000000a}
 .toc a.on{border-left-color:var(--primary);color:var(--primary);font-weight:600}
-table.sect{scroll-margin-top:72px}
+table.sect{scroll-margin-top:124px}
 @media (max-width:1460px){ .content:has(.toc) .page.narrow{margin-left:max(32px,calc(50% - 600px));margin-right:auto;max-width:min(960px,calc(100% - 256px))} .toc{left:auto;right:24px} }
 /* review cards */
 .gcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
@@ -311,8 +319,12 @@ function setupGroupsStep(){
   }
   computeOrder();
 }
+// When regrouping, shuffle so a second run gives new combinations
+let AUTO_SHUFFLE=false;
+const shuffled=a=>{const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r};
+const orderBy=(arr,cmp)=>AUTO_SHUFFLE?shuffled(arr).sort((a,b)=>cmp(a,b)):arr.sort((a,b)=>cmp(a,b)||a.name.localeCompare(b.name));
 function autoGroup(byDistrict){
-  const todo=ungrouped().sort((a,b)=>byDistrict?(a.district.localeCompare(b.district)||a.name.localeCompare(b.name)):a.name.localeCompare(b.name));
+  const todo=orderBy(ungrouped(),(a,b)=>byDistrict?a.district.localeCompare(b.district):0);
   let free=S.groups.reduce((s,g)=>s+placesLeft(g.id),0);
   while(free<todo.length){const n=S.groups.length+1;S.groups.push({id:nid('g'),name:'Group '+n,trainer:null});free+=MAX}
   const target=Math.min(MAX,Math.ceil(S.teachers.length/S.groups.length));
@@ -327,7 +339,7 @@ function autoGroupStrict(){
   const todo=ungrouped();const byD={};
   todo.forEach(t=>(byD[t.district||'—']=byD[t.district||'—']||[]).push(t));
   for(const d of Object.keys(byD).sort()){
-    const ppl=byD[d].sort((a,b)=>a.name.localeCompare(b.name));let i=0;
+    const ppl=orderBy(byD[d],()=>0);let i=0;
     // top up groups that already hold only this district
     for(const g of S.groups){const m=members(g.id);if(m.length&&m.every(t=>(t.district||'—')===d)){let room=MAX-m.length;while(room-->0&&i<ppl.length)ppl[i++].group=g.id}}
     const r=ppl.length-i;if(!r)continue;
@@ -342,7 +354,7 @@ function autoGroupStrict(){
   S.groups=S.groups.filter(g=>members(g.id).length||g.trainer||(g.name&&!/^Group \d+$/.test(g.name)));
   let n=1;S.groups.forEach(g=>{if(!g.name||/^Group \d+$/.test(g.name)){while(S.groups.some(x=>x!==g&&x.name==='Group '+n&&!/^Group \d+$/.test(x.name)))n++;g.name='Group '+(n++)}});
 }
-function autoPreview(){const snap=snapshot();const before=S.groups.length;S.autoByDistrict?autoGroupStrict():autoGroup(false);const n=S.groups.length;restore(snap);return {n,added:n-before}}
+function autoPreview(){const snap=snapshot();const before=S.groups.length;if(!ungrouped().length)S.teachers.forEach(t=>t.group=null);S.autoByDistrict?autoGroupStrict():autoGroup(false);const n=S.groups.length;restore(snap);return {n,added:n-before}}
 
 /* ---------- shells ---------- */
 function wizard(inner,{cont='Continue',contAct='next',contDisabled=false,back=true,panel=''}={}){
@@ -498,7 +510,9 @@ function scrW4(){
      <td class="cb"><input type="checkbox" aria-label="Select ${esc(t.name)}" data-change="selOne" data-id="${t.id}" ${S.selected.has(t.id)?'checked':''}></td>
      <td><div>${esc(t.name)}</div><div class="cap">${esc(t.phone)}</div></td>
      <td>${esc(t.district)}</td>
-     <td>${selectField('gsel-'+t.id,'Group',t.group||'',groupOpts(t),{ph:'Choose group',compact:true,act:'setGroup'})}</td>
+     <td>${t.group
+       ?selectField('gsel-'+t.id,'Group',t.group,[...groupOpts(t),{v:'',t:'Remove'}],{compact:true,act:'setGroup'})
+       :selectField('gsel-'+t.id,'Group','',groupOpts(t),{ph:'Choose group',compact:true,act:'setGroup'})}</td>
      <td class="ed"><button class="iconbtn" title="Edit ${esc(t.name)}" data-act="editPerson" data-id="${t.id}">${I('edit','sm')}</button></td></tr>`;
   const colHead=(secKey,list)=>{const n=list.filter(t=>S.selected.has(t.id)).length;
     return `<tr class="colhead"><th class="cb"><input type="checkbox" aria-label="Select all in this section" data-change="selSection" data-sec="${secKey}" ${list.length&&n===list.length?'checked':''} ${list.length?'':'disabled'}></th>
@@ -529,15 +543,15 @@ function scrW4(){
   const u=uAll.length;
   const main=`<div class="page narrow stack">
     <div><div class="row"><h1 class="h3">Build WhatsApp groups</h1><span class="spacer"></span>
-      <button class="btn primary" data-act="openAuto" ${u?'':'disabled'} title="${u?'':'Every teacher is already in a group'}">Auto-group</button></div>
+      <button class="btn primary" data-act="openAuto">Auto-group</button></div>
       <p class="ann">Up to ${MAX} teachers per group. Choose a group for each teacher and they move into that group’s section.</p></div>
-    <div class="selbar"><span class="h5">${plural(S.teachers.length,'teacher')} &nbsp;|&nbsp; ${u} ungrouped</span><span class="spacer"></span>
-      ${sel?`<span>${sel} selected</span><button class="btn flat" data-act="clearSel">CLEAR</button>`:'<span class="ann">Select teachers to move several at once</span>'}
+    <div class="selbar sticky" id="selbar"><span class="h5">${plural(S.teachers.length,'teacher')} &nbsp;|&nbsp; ${u} ungrouped</span><span class="spacer"></span>
+      ${sel?`<span>${sel} selected</span><button class="btn flat" data-act="clearSel">CLEAR</button>`:''}
       <div class="menuwrap"><button class="btn secondary" data-act="toggleMenu" ${sel?'':'disabled'}>MOVE TO GROUP ${I('caret','sm')}</button>${menu}</div></div>
     <div class="filter">${I('search','sm')}<input id="filter" placeholder="Search teachers…" value="${esc(S.filter)}" data-model="filter">${S.filter?`<button class="iconbtn" data-act="clearFilter" title="Clear">${I('close','sm')}</button>`:''}</div>
     ${sections.length?sections.join(''):`<p class="ann" style="text-align:center;padding:32px">No teachers match “${esc(S.filter)}”</p>`}
     <div><button class="btn flat" data-act="addGroup">${I('add','sm')}ADD A GROUP</button></div></div>`;
-  const toc=`<nav class="toc" aria-label="Jump to a group">${S.groups.map(g=>`<a href="#sec-${g.id}" data-act="jump" data-g="${g.id}">${esc(g.name)} <span class="ann">(${members(g.id).length}/${MAX})</span></a>`).join('')}</nav>`;
+  const toc=`<nav class="toc" aria-label="Jump to a group">${u?`<a href="#sec-u" data-act="jump" data-g="u">Ungrouped <span class="ann">(${u})</span></a>`:''}${S.groups.map(g=>`<a href="#sec-${g.id}" data-act="jump" data-g="${g.id}">${esc(g.name)} <span class="ann">(${members(g.id).length}/${MAX})</span></a>`).join('')}</nav>`;
   return wizard(main+toc,{contDisabled:issues().length>0});
 }
 function scrW4c(){
@@ -574,7 +588,7 @@ function render(){
 function modalHtml(){
   if(S.modal==='auto'){const u=ungrouped().length;
     return `<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 class="h4" id="mt">Auto-group teachers</h2>
-      <p style="margin-top:12px">Place ${u===S.teachers.length?'all '+u:'the '+u+' ungrouped'} teacher${u===1?'':'s'} in groups of up to ${MAX}. You can move anyone afterwards.</p>
+      <p style="margin-top:12px">${u===0?`Everyone is already in a group. This will reshuffle all ${S.teachers.length} teachers into new groups of up to ${MAX}. You can move anyone afterwards.`:`Place ${u===S.teachers.length?'all '+u:'the '+u+' ungrouped'} teacher${u===1?'':'s'} in groups of up to ${MAX}. You can move anyone afterwards.`}</p>
       <div style="margin-top:16px"><label class="chk"><input type="checkbox" data-change="autoDistrict" ${S.autoByDistrict?'checked':''}> Group by district</label><div class="cap" style="margin:2px 0 0 26px">One district per group. Adds groups if needed.</div></div>
       <p class="cap" style="margin:12px 0 0">${(()=>{const p=autoPreview();return `This will make ${plural(p.n,'group')}`+(p.added>0?` (${p.added} new)`:'')+'.'})()}</p>
       <div class="actions"><button class="btn flat" data-act="closeModal">GROUP MANUALLY</button><button class="btn primary" data-act="runAuto" data-focus>Auto-group</button></div></div></div>`}
@@ -592,7 +606,7 @@ function modalHtml(){
         <label class="chk"><input type="radio" name="erole" value="trainer" data-change="editRole" ${d.role==='trainer'?'checked':''}> Trainer</label></div>
         ${d.role!==d.orig?`<div class="help" style="margin-left:0">${d.role==='trainer'?(inW4&&d.group?`They’ll be taken out of ${esc(gName(d.group))} and can be chosen as a group’s trainer.`:'They can be chosen as a group’s trainer.'):'They’ll be listed with the teachers, ready to put in a group.'}</div>`:''}</div>
       </div>
-      <div class="actions"><button class="btn flat" data-act="closeModal">CANCEL</button><button class="btn primary" data-act="saveEdit" data-focus>SAVE</button></div></div></div>`}
+      <div class="actions"><button class="btn flat danger" data-act="removePerson" style="margin-right:auto">REMOVE USER</button><button class="btn flat" data-act="closeModal">CANCEL</button><button class="btn primary" data-act="saveEdit" data-focus>SAVE</button></div></div></div>`}
   if(S.modal==='delete') return `<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 class="h4" id="mt">Delete this draft?</h2>
       <p style="margin-top:12px">“${esc(S.program.name||'Untitled program')}” and everything added so far will be deleted. You can’t undo this.</p>
       <div class="actions"><button class="btn flat" data-act="closeModal" data-focus>CANCEL</button><button class="btn primary" data-act="deleteDraft">Delete draft</button></div></div></div>`;
@@ -669,6 +683,13 @@ const A={
   openAuto(){openModal('auto')},
   editPerson(el){const id=el.dataset.id;const tr=S.trainers.find(p=>p.id===id);const p=tr||S.teachers.find(x=>x.id===id);
     S.edit={id,orig:tr?'trainer':'teacher',role:tr?'trainer':'teacher',name:p.name,phone:p.phone,district:p.district,school:p.school||'',subjects:p.subjects||'',group:p.group,errors:{}};openModal('edit')},
+  removePerson(){const d=S.edit;const isTr=d.orig==='trainer';const list=isTr?S.trainers:S.teachers;const idx=list.findIndex(x=>x.id===d.id);if(idx<0)return;
+    const p=list[idx];const groupsWithTrainer=S.groups.filter(g=>g.trainer===p.id).map(g=>g.id);const wasSel=S.selected.has(p.id);
+    const sync=()=>{if(S.screen==='w4'){S.groupsBuiltFor=S.teachers.map(t=>t.id).join();computeOrder()}};
+    list.splice(idx,1);S.selected.delete(p.id);S.groups.forEach(g=>{if(g.trainer===p.id){g.trainer=null;g.trainerAuto=false}});sync();
+    S.modal=null;S.edit=null;
+    snack(`${p.name} removed`,()=>{list.splice(idx,0,p);S.groups.forEach(g=>{if(groupsWithTrainer.includes(g.id))g.trainer=p.id});if(wasSel)S.selected.add(p.id);sync()});
+    render()},
   saveEdit(){const d=S.edit,e={};
     if(!d.name.trim()) e.name='Enter a name';
     const ph=d.phone.trim();
@@ -687,7 +708,8 @@ const A={
       if(S.screen==='w4'){S.groupsBuiltFor=S.teachers.map(t=>t.id).join();fillTrainers();computeOrder()}
     }
     S.modal=null;S.edit=null;snack(msg);render()},
-  runAuto(){const snap=snapshot();S.autoByDistrict?autoGroupStrict():autoGroup(false);S.groups.forEach(g=>{if(g.trainerAuto)g.trainer=null});fillTrainers();S.showNames=true;S.modal=null;snack('Auto-grouping completed',()=>restore(snap));render()},
+  runAuto(){const snap=snapshot();const regroup=!ungrouped().length;if(regroup){S.teachers.forEach(t=>t.group=null);AUTO_SHUFFLE=true}
+    S.autoByDistrict?autoGroupStrict():autoGroup(false);AUTO_SHUFFLE=false;S.groups.forEach(g=>{if(g.trainerAuto)g.trainer=null});fillTrainers();S.showNames=true;S.modal=null;snack(regroup?'Teachers regrouped':'Auto-grouping completed',()=>restore(snap));render()},
   undo(){S.snackbar?.undo?.();S.snackbar=null;render()},
   dismiss(){S.snackbar=null;render()},
   addGroup(){const n=Math.max(0,...S.groups.map(g=>+(g.name.match(/^Group (\d+)$/)||[0,0])[1]))+1;S.groups.push({id:nid('g'),name:'Group '+n,trainer:null});fillTrainers();render();const p=document.getElementById('panel');if(p)p.scrollTop=p.scrollHeight},
@@ -721,8 +743,8 @@ document.addEventListener('input',e=>{const el=e.target;if(el.dataset.model){set
   if(el.dataset.model==='filter'||el.dataset.model==='renameVal'){if(el.dataset.model==='renameVal')S.renameErr='';else render()}
   else if(S.errors&&Object.keys(S.errors).length){const k=el.id;if(S.errors[k]||S.errors.name&&k==='f-name'){delete S.errors[k];if(k==='f-name')delete S.errors.name;render()}}}});
 document.addEventListener('change',e=>{const el=e.target;if(el.dataset.change)CH[el.dataset.change]?.(el);else if(el.dataset.model&&el.tagName==='SELECT'){setPath(el.dataset.model,el.value);render()}});
-function tocSync(){const links=[...document.querySelectorAll('.toc a')];if(!links.length)return;
-  let cur=null;for(const a of links){const t=document.getElementById(a.getAttribute('href').slice(1));if(t&&t.getBoundingClientRect().top<=140)cur=a}
+function tocSync(){const sb=document.getElementById('selbar');if(sb)sb.classList.toggle('stuck',sb.getBoundingClientRect().top<=56.5);const links=[...document.querySelectorAll('.toc a')];if(!links.length)return;
+  let cur=null;for(const a of links){const t=document.getElementById(a.getAttribute('href').slice(1));if(t&&t.getBoundingClientRect().top<=170)cur=a}
   links.forEach(a=>a.classList.toggle('on',a===cur))}
 window.addEventListener('scroll',tocSync,{passive:true});
 document.addEventListener('keydown',e=>{
