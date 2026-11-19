@@ -1425,10 +1425,10 @@ function adminModal(){
   case 'a-trainer':{const g=grp(md.id);return mwrap(g.trainer?'Change trainer':'Add trainer',`<p class="ann">${esc(g.name)}</p>${selF('m-tr','Trainer',md.tr||'',[{v:'',t:'No trainer'},...a.trainers.map(t=>({v:t.id,t:`${t.name} · ${t.district}`}))],'ad.md.tr')}<div class="help" style="margin-left:0">Trainers aren’t in the group chat. They get the group’s digest and alerts.</div>`,btnF('CANCEL','closeModal')+btnP('SAVE','doTrainer'))}
   case 'a-delgrp':{const g=grp(md.id);const n=gMembers(g.id).length;return mwrap(`Delete ${esc(g.name)}?`,`<p>The group is removed on WhatsApp for everyone. ${n?`Its ${plural(n,'teacher')} will be listed as “Not in a group”.`:''} You can’t undo this.</p>`,btnF('CANCEL','closeModal')+btnP('DELETE GROUP','doDelGroup'))}
   case 'a-newgrp':{const trs=a.trainers.filter(t=>!md.district||t.district===md.district);
-    return mwrap('New group',`<p class="ann">${md.fromEdit?`Name the group and choose its trainer. The ${plural(md.n,'selected teacher')} will move into it.`:'Name the group and choose its trainer. You’ll add teachers next.'}</p>
+    return mwrap('New group',`<p class="ann">${md.fromEdit||md.fromUsers?`Name the group and choose its trainer. ${md.n===1?'The selected teacher':`The ${md.n} selected teachers`} will ${md.fromUsers&&!L()?'be added to it. Invites go out when you launch the program.':md.fromUsers?'be added and get its invite link.':'move into it.'}`:'Name the group and choose its trainer. You’ll add teachers next.'}</p>
       ${field('m-gname','Group name',md.name,{model:'ad.md.name',err:md.err,help:'Teachers see this name in WhatsApp'})}
       ${selF('m-gd','District',md.district||'',[{v:'',t:'Choose a district'},...DISTRICTS],'ad.md.district')}
-      <div>${selF('m-gt','Trainer',md.tr||'',[{v:'',t:'Choose later'},...trs.map(t=>({v:t.id,t:t.name}))],'ad.md.tr')}<div class="help">${md.district?`Trainers in ${md.district}. `:''}A trainer can lead more than one group.</div></div>`,btnF('CANCEL','closeModal')+(md.fromEdit?btnP('CREATE GROUP','doEgNewGroup'):btnP('CONTINUE','doNewGroup')))}
+      <div>${selF('m-gt','Trainer',md.tr||'',[{v:'',t:'Choose later'},...trs.map(t=>({v:t.id,t:t.name}))],'ad.md.tr')}<div class="help">${md.district?`Trainers in ${md.district}. `:''}A trainer can lead more than one group.</div></div>`,btnF('CANCEL','closeModal')+(md.fromEdit?btnP('CREATE GROUP','doEgNewGroup'):md.fromUsers?btnF('BACK','mBackToAdd')+btnP('CREATE GROUP','doUsersNewGroup'):btnP('CONTINUE','doNewGroup')))}
   case 'a-user':{const ctx=md.ctx;const isNew=ctx==='add';const e=md.err||{};
     const gopts=a.groups.filter(g=>(!md.district||g.district===md.district)&&(gMembers(g.id).length<MAX||g.id===md.group)).map(g=>({v:g.id,t:`${g.name} (${gMembers(g.id).length}/${MAX})`}));
     const note=ctx==='upload'?'':md.role==='trainer'?'Trainers aren’t added to group chats. They get digests and alerts for their groups.':(md.group?(L()?'They’ll get a WhatsApp invite to the group when you save.':'They’ll get a WhatsApp invite to the group when you launch the program.'):'They’ll get a WhatsApp invite once they’re in a group.');
@@ -1449,7 +1449,7 @@ function adminModal(){
     const note=L()?(need===1?`${esc(ppl[0].name.split(' ')[0])} will get a WhatsApp message with the link to join the group.`:'They’ll each get a WhatsApp message with the link to join the group.'):'Invites go out when you launch the program.';
     return mwrap(title,`<p class="ann">${md.all?'Showing all groups.':`Showing groups in ${esc(d)}.`} Groups hold up to ${MAX} teachers.</p>
       <div class="filter">${I('search','sm')}<input id="m-gq" placeholder="Search groups" value="${esc(md.q||'')}" data-model="ad.md.q" data-live="1"></div>
-      <div class="scrollist" style="margin-top:0">${opts||'<div class="ann" style="padding:12px">No groups match</div>'}</div>
+      <div class="scrollist" style="margin-top:0">${need<=MAX?`<button class="gopt" style="width:100%;background:none;border:0;border-bottom:1px solid var(--fine);font:inherit;color:var(--primary);cursor:pointer;text-align:left" data-act="mNewGrpFromAdd">${I('add','sm')}<span style="font-weight:600">Create new group</span></button>`:''}${opts||'<div class="ann" style="padding:12px">No groups match</div>'}</div>
       ${md.all?'':`<div><button class="btn flat" data-act="mAllGroups">SHOW GROUPS IN OTHER DISTRICTS</button></div>`}
       <div class="note">${I('info','sm')}<span>${note}</span></div>`,btnF('CANCEL','closeModal')+btnP(need===1&&ppl[0].group?'MOVE':'ADD TO GROUP','doAddGrp',md.g?'':'disabled'),600)}
   }
@@ -1588,6 +1588,15 @@ Object.assign(A,{
   askAddGrp(el){S.ad.menu=null;S.ad.md={ids:[el.dataset.id],g:null,q:'',all:false};openModal('a-addgrp')},
   askAddGrpSel(){S.ad.md={ids:[...S.ad.sel],g:null,q:'',all:false};openModal('a-addgrp')},
   mAllGroups(){S.ad.md.all=true;render()},
+  mNewGrpFromAdd(){const prev=S.ad.md;const ids=prev.ids;const d=AD().teachers.find(t=>t.id===ids[0])?.district||'';
+    S.ad.md={name:'',district:d,tr:'',fromUsers:true,n:ids.length,ids,prev};S.modal='a-newgrp';render()},
+  mBackToAdd(){S.ad.md=S.ad.md.prev;S.modal='a-addgrp';render()},
+  doUsersNewGroup(){const md=S.ad.md,a=AD();const v=(md.name||'').trim();if(!v){md.err='Enter a group name';render();return}
+    if(a.groups.some(g=>g.name.toLowerCase()===v.toLowerCase())){md.err='Another group already has this name';render();return}
+    const g={id:nid('g'),name:v,district:md.district||v.split(' · ')[0],trainer:md.tr||null,last:null};a.groups.push(g);
+    const ppl=md.ids.map(id=>a.teachers.find(t=>t.id===id));const prev=ppl.map(p=>[p,p.group,p.wa,p.last]);
+    ppl.forEach(p=>{p.group=g.id;p.wa=L()?'invited':'notinv';p.last=null});a.sel.clear();S.modal=null;
+    snack(`${v} created with ${plural(ppl.length,'teacher')}`,()=>{prev.forEach(([p,gr,wa,l])=>{p.group=gr;p.wa=wa;p.last=l});a.groups=a.groups.filter(x=>x!==g)});render()},
   doAddGrp(){const md=S.ad.md;const g=grp(md.g);const ppl=md.ids.map(id=>AD().teachers.find(t=>t.id===id));const prev=ppl.map(p=>[p,p.group,p.wa,p.last]);
     ppl.forEach(p=>{p.group=g.id;p.wa=L()?'invited':'notinv';p.last=null});S.ad.sel.clear();S.modal=null;
     snack(ppl.length===1?`${ppl[0].name} added to ${g.name}`:`${ppl.length} teachers added to ${g.name}`,()=>prev.forEach(([p,gr,wa,l])=>{p.group=gr;p.wa=wa;p.last=l}));render()},
