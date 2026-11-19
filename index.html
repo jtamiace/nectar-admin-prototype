@@ -900,6 +900,7 @@ Object.assign(P,{
  check:'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
  pause:'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
  more:'M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+ arrowL:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',arrowR:'M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z',
  chevL:'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', chevR:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
  person:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'
 });
@@ -1326,7 +1327,12 @@ function scrUsers(){
   let list=all.filter(p=>(!q||(p.name+' '+p.phone).toLowerCase().includes(q))&&(!fr||p.role===fr)&&(!fd||p.district===fd)&&(!fg||(fg==='none'?p.role==='teacher'&&!p.group:p.group===fg)));
   list=sortBy('u',list,{name:p=>p.name,role:p=>p.role,district:p=>p.district,group:p=>p.role==='trainer'?'':(grp(p.group)?.name||'~'),wa:p=>waOf(p),last:p=>lastOf(p)});
   if(!a.sort.u) list=[...list].sort((x,y)=>x.name.localeCompare(y.name));
-  const shown=list.slice(0,a.shown);const ung=a.teachers.filter(t=>!t.group).length;const sel=a.sel;
+  const PER=30;const key=[q,fr,fd,fg,JSON.stringify(a.sort.u||{})].join('|');if(a.uKey!==key){a.uKey=key;a.page=0}
+  const pages=Math.max(1,Math.ceil(list.length/PER));a.page=Math.min(a.page||0,pages-1);
+  const from=a.page*PER;const shown=list.slice(from,from+PER);
+  const pager=`<div class="row" style="justify-content:flex-end;gap:8px;margin:4px 0 8px"><span>${list.length?`${from+1} - ${from+shown.length} of ${list.length.toLocaleString()}`:'0 of 0'}</span>
+    <button class="iconbtn" data-act="uPage" data-d="-1" aria-label="Previous page" ${a.page>0?'style="color:#000"':'disabled style="color:#000;opacity:.35;cursor:default;background:none"'}>${I('arrowL')}</button>
+    <button class="iconbtn" data-act="uPage" data-d="1" aria-label="Next page" ${a.page<pages-1?'style="color:#000"':'disabled style="color:#000;opacity:.35;cursor:default;background:none"'}>${I('arrowR')}</button></div>`;const ung=a.teachers.filter(t=>!t.group).length;const sel=a.sel;
   const selTeachers=[...sel].every(id=>a.teachers.some(t=>t.id===id));
   const rows=shown.map((p,i)=>{const isT=p.role==='trainer';const ng=a.groups.filter(g=>g.trainer===p.id).length;
     const items=isT?mi('Edit details','askUser',`data-id="${p.id}"`)+mi('View groups','viewTrainerGroups',`data-id="${p.id}"`)+'<hr>'+mi('Remove user','rmUser',`data-id="${p.id}"`,{danger:true})
@@ -1342,10 +1348,10 @@ function scrUsers(){
   return ashell('users',`<div class="apage" style="max-width:1300px"><div class="ahead"><h1 class="h3" style="font-size:24px">Users</h1><button class="btn secondary" data-act="startUpload">UPLOAD CSV</button><button class="btn primary" data-act="askUser">ADD USER</button></div>
     <div class="toolbar" style="margin-top:16px"><div class="filter">${I('search','sm')}<input id="q-u" placeholder="Search by name or phone" value="${esc(a.q.u||'')}" data-model="ad.q.u" data-live="1"></div>
      ${selF('f-ur','Role',fr,[{v:'',t:'All'},{v:'teacher',t:'Teacher'},{v:'trainer',t:'Trainer'}],'ad.f.ur')}${selF('f-ud','District',fd,[{v:'',t:'All'},...DISTRICTS],'ad.f.ud')}${selF('f-ug','Group',fg,[{v:'',t:'All'},{v:'none',t:'Not in a group'},...a.groups.map(g=>({v:g.id,t:g.name}))],'ad.f.ug')}</div>
-    ${topBar}
+    ${topBar}${pager}
     <table class="atable"><thead><tr><th><input type="checkbox" data-change="uSelAll" ${allVis?'checked':''} aria-label="Select all shown"></th><th>${sortH('u','name','Name')}</th><th>${sortH('u','role','Role')}</th><th>${sortH('u','district','District')}</th><th>School</th><th>Subjects</th><th>${sortH('u','group','Group')}</th><th>${sortH('u','wa','WhatsApp')}</th><th>${sortH('u','last','Last posted')}</th><th></th></tr></thead>
     <tbody>${rows||'<tr><td colspan="10" class="ann" style="text-align:center;padding:32px">No one matches</td></tr>'}</tbody></table>
-    <div class="row" style="justify-content:flex-end;margin-top:12px"><span class="cap">Showing ${shown.length} of ${list.length} people</span>${list.length>shown.length?'<button class="btn flat" data-act="showMore">SHOW MORE</button>':''}</div></div>`);
+    </div>`);
 }
 
 /* ---------------- upload users (full screen) ---------------- */
@@ -1584,7 +1590,7 @@ Object.assign(A,{
   viewTrainerGroups(el){S.ad.menu=null;S.ad.f.gt=el.dataset.id;aGo('groups')},
   filterUngrouped(){S.ad.f.ug='none';render()},
   uClear(){S.ad.sel.clear();render()},
-  showMore(){S.ad.shown+=25;render()},
+  uPage(el){S.ad.page=(S.ad.page||0)+(+el.dataset.d);window.scrollTo({top:0});render()},
   askAddGrp(el){S.ad.menu=null;S.ad.md={ids:[el.dataset.id],g:null,q:'',all:false};openModal('a-addgrp')},
   askAddGrpSel(){S.ad.md={ids:[...S.ad.sel],g:null,q:'',all:false};openModal('a-addgrp')},
   mAllGroups(){S.ad.md.all=true;render()},
