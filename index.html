@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nectar · Create a program (prototype)</title>
+<title>Nectar · Admin prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -157,7 +157,7 @@ tr.flash td{animation:flash 1.6s ease-out}
 html,body{overflow-x:clip}
 /* groups table of contents */
 .toc{position:fixed;top:120px;bottom:96px;left:calc(50% + 504px);width:200px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;z-index:5}
-.toc a{display:block;padding:6px 12px;border-left:2px solid var(--fine);color:var(--text);text-decoration:none;font-size:14px}
+.toc a{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;padding:6px 12px;border-left:2px solid var(--fine);color:var(--text);text-decoration:none;font-size:14px}
 .toc a:hover{background:#0000000a}
 .toc a.on{border-left-color:var(--primary);color:var(--primary);font-weight:600}
 table.sect{scroll-margin-top:124px}
@@ -186,6 +186,118 @@ table.sect{scroll-margin-top:124px}
 .drafts .personrow:first-child{border-top:0;padding-top:0}
 .draftactions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}
 .sectionhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+
+/* ================= admin UI ================= */
+.appbar.admin{padding:0 24px 0 16px;gap:24px;justify-content:flex-start}
+.appbar.admin .brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:16px;background:none;border:0;cursor:pointer;font-family:inherit;padding:0 8px 0 0}
+.navtabs{display:flex;height:56px;align-self:stretch}
+.navtab{display:flex;align-items:center;gap:6px;padding:0 16px;background:none;border:0;font:inherit;cursor:pointer;color:#000;border-bottom:3px solid transparent;border-top:3px solid transparent}
+.navtab .icon{width:20px;height:20px}
+.navtab:hover{background:#0000000d}
+.navtab.on{border-bottom-color:#000;font-weight:600}
+.appbar.admin .user{margin-left:auto;display:flex;align-items:center;gap:8px}
+.acontent{padding:24px 32px 64px;max-width:1440px;margin:0 auto}
+.apage{background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.2);padding:28px 32px;max-width:1240px;margin:0 auto}
+.apage+.apage{margin-top:16px}
+.ahead{display:flex;align-items:flex-start;gap:12px}
+.ahead h1{flex:1}
+.subtabs{display:flex;gap:0;border-bottom:1px solid var(--fine);margin:16px -32px 24px;padding:0 20px}
+.subtab{background:none;border:0;font:inherit;text-transform:uppercase;font-weight:600;color:var(--annotation);padding:12px 16px;cursor:pointer;border-bottom:2px solid transparent}
+.subtab.on{color:var(--primary);border-bottom-color:var(--primary)}
+.subtab:hover{background:#0000000a}
+.toolbar{display:flex;gap:16px;align-items:center;margin-bottom:16px}
+.toolbar .filter{flex:1}
+.toolbar .field{width:180px;flex:none;min-height:46px;padding-top:18px;padding-bottom:3px}
+.atable th{font-size:13px;font-weight:600;color:var(--annotation)}
+.atable td{padding:12px}
+.wk td{white-space:nowrap}
+.tscroll{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.tscroll .atable td,.tscroll .atable th{white-space:nowrap}
+.tscroll>table.atable.wk{min-width:1120px}
+.tscroll>table:not(.atable){min-width:720px}
+.atable th{white-space:nowrap}
+.tscroll::-webkit-scrollbar{height:8px}.tscroll::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px}
+.amenu.floating{position:fixed;right:auto;bottom:auto}
+.atable tr.day-last td{border-bottom:1px solid var(--fine)}
+.atable tr.in-day td{border-bottom:0}
+.atable tr.nothing td{background:#f5f5f5}
+.atable tr:hover td.hov{background:#fafafa}
+.trunc{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:4px;border-radius:12px;padding:2px 10px 2px 6px;font-size:13px;white-space:nowrap}
+.chip .icon{width:16px;height:16px}
+.chip.nolead{padding-left:10px}
+.bot{display:inline-block;border:1px solid #bbb;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.04em;color:#666;padding:0 4px;margin-left:6px;vertical-align:1px;line-height:14px}
+.morebtn{background:none;border:0;border-radius:50%;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.morebtn:hover{background:#0000000f}
+.amenu{position:absolute;right:0;top:36px;background:#fff;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.25);min-width:220px;padding:6px 0;z-index:45;text-align:left}
+.amenu.up{top:auto;bottom:36px}
+.amenu button{display:block;width:100%;background:none;border:0;font:inherit;padding:9px 16px;cursor:pointer;text-align:left;white-space:nowrap}
+.amenu button:hover:not([disabled]){background:var(--bg)}
+.amenu button[disabled]{color:#aaa;cursor:not-allowed}
+.amenu button.danger{color:var(--error)}
+.amenu hr{border:0;border-top:1px solid var(--fine);margin:6px 0}
+.amenu .opt-sel{background:var(--blue50);color:var(--primary)}
+.gl{color:var(--primary);text-decoration:underline;background:none;border:0;font:inherit;cursor:pointer;padding:0;text-align:left}
+.warnicon{color:#e6b800}
+.stats{display:grid;grid-template-columns:repeat(3,1fr)}
+.stats>div{padding:0 24px;border-left:1px solid var(--fine)}
+.stats>div:first-child{padding-left:0;border-left:0}
+.statv{font-size:22px;font-weight:600}
+.facts{display:flex;gap:32px}
+.weeknav{display:flex;align-items:center;gap:8px;margin-bottom:16px;position:relative}
+.calpop{position:absolute;top:44px;left:120px;background:#fff;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.25);padding:12px;z-index:45;width:300px}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;margin-top:8px}
+.calgrid span{font-size:12px;color:var(--annotation);padding:4px 0}
+.calgrid button{background:none;border:0;font:inherit;height:32px;border-radius:16px;cursor:pointer}
+.calgrid button.out{color:#bbb}
+.calgrid button.wk{background:var(--blue100);border-radius:0;font-weight:600}
+.calgrid button:hover{outline:1px solid var(--primary)}
+.backlink{display:inline-block;margin:0 0 12px calc(50% - 620px);color:var(--primary);background:none;border:0;font:inherit;cursor:pointer;text-decoration:underline}
+@media (max-width:1300px){.backlink{margin-left:0}}
+.convwrap{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.sidepanel{background:#f7f7f7;border-radius:4px;padding:16px}
+.sidepanel .stat+.stat{margin-top:16px}
+.msg{display:flex;gap:12px;padding:8px 0}
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex:none;margin-top:2px}
+.botmsg{background:var(--blue50);border:1px solid var(--blue100);border-radius:6px;padding:10px 12px;flex:1}
+.daysep{display:flex;align-items:center;gap:12px;color:var(--annotation);font-size:12px;margin:12px 0}
+.daysep::before,.daysep::after{content:"";flex:1;border-top:1px solid var(--fine)}
+.trainercard{background:#f5f5f5;border-radius:4px;padding:12px 16px;display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.note{display:flex;gap:8px;align-items:flex-start;color:var(--annotation)}
+.note .icon{width:20px;height:20px}
+.preview{background:#f5f5f5;border-radius:4px;padding:16px}
+.bubble{background:#fff;border-radius:6px;padding:12px 14px;box-shadow:0 1px 1px rgba(0,0,0,.08);white-space:pre-wrap}
+.tokfield{background:var(--bg);border-bottom:1px solid var(--annotation);border-radius:4px 4px 0 0;padding:26px 12px 8px;min-height:50px;position:relative;line-height:2.1;cursor:text}
+.tokfield:focus-within{border-bottom:2px solid var(--primary);padding-bottom:7px}
+.tokfield>label{position:absolute;left:12px;top:4px;font-size:12px;color:var(--annotation)}
+.tokfield:focus-within>label{color:var(--primary)}
+.seg{outline:none;padding:2px 1px;min-width:4px;display:inline;white-space:pre-wrap}
+.vchip{display:inline-flex;flex-direction:column;align-items:flex-start;vertical-align:middle;background:#fff;border:1px solid var(--blue100);border-radius:4px;padding:1px 22px 1px 6px;margin:0 3px;font:inherit;cursor:pointer;position:relative;line-height:1.25}
+.vchip small{font-size:11px;color:var(--primary)}
+.vchip b{font-weight:600;font-size:13px}
+.vchip .icon{position:absolute;right:2px;bottom:2px;width:16px;height:16px;color:var(--annotation)}
+.vmenu{position:absolute;background:#fff;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:50;width:300px;padding:6px 0;line-height:1.45}
+.vmenu .scroll{max-height:220px;overflow-y:auto}
+.vmenu button{display:flex;justify-content:space-between;gap:12px;width:100%;background:none;border:0;font:inherit;padding:8px 14px;cursor:pointer;text-align:left}
+.vmenu button:hover{background:var(--bg)}
+.vmenu button.on{background:var(--blue50);color:var(--primary)}
+.counter{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--annotation);margin:4px 0 0}
+.mediabox{background:var(--bg);border-radius:4px;padding:12px 16px}
+.pdf{width:32px;height:40px;border-radius:3px;background:#e53935;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.ftype{width:24px;height:30px;border-radius:3px;color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.tplgrid{display:grid;grid-template-columns:1fr 340px;gap:32px;align-items:start}
+.radios{display:flex;gap:24px;align-items:center}
+.sel-bar{background:#eee;border-radius:4px;padding:6px 8px 6px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;min-height:52px}
+.uprow-fix td{background:#fff8e6}
+.badtext{color:var(--error)}
+.gopt{display:flex;align-items:center;gap:12px;padding:10px 8px;border-bottom:1px solid var(--fine);cursor:pointer}
+.gopt.on{background:var(--blue50)}
+.gopt.dis{color:#aaa;cursor:not-allowed}
+.scrollist{max-height:300px;overflow-y:auto;margin-top:12px}
+.tip{position:relative;display:inline-block}
+.ahead .tip[data-tip]:hover::after{left:auto;right:0}
+.tip.tipw[data-tip]:hover::after,.tip.tipw[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:-8px;bottom:calc(100% + 6px);background:#333;color:#fff;font-size:12px;padding:6px 10px;border-radius:3px;white-space:normal;width:300px;z-index:30;line-height:1.4}
+.tip[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:0;pointer-events:none;bottom:calc(100% + 4px);background:#333;color:#fff;font-size:12px;padding:3px 8px;border-radius:3px;white-space:nowrap;z-index:30}
 </style>
 </head>
 <body>
@@ -378,10 +490,14 @@ function selectField(id,label,val,opts,{model,ph,compact=false,act}={}){
 /* ---------- screens ---------- */
 function scrPrograms(){
   const d=S.draft;
-  const body=d?`<div class="card"><div style="flex:1"><div class="h5">${esc(S.program.name||'Untitled program')}</div>
+  const body=S.ad?`<div class="card"><div style="flex:1"><div class="h5">${esc(progName())}</div>
+      <div class="row" style="gap:8px;margin-top:4px"><span class="pill" style="background:${S.ad.launched?'#e3f5e8':'#eee'}">${S.ad.launched?'Active':'Not launched yet'}</span><span class="ann">${S.ad.groups.length} groups · ${S.ad.teachers.length} teachers</span></div></div>
+      <button class="btn primary" data-act="openAdmin">OPEN</button></div>`
+   :d?`<div class="card"><div style="flex:1"><div class="h5">${esc(S.program.name||'Untitled program')}</div>
       <div class="row" style="gap:8px;margin-top:4px"><span class="pill">Setup in progress</span><span class="ann">Step ${STEP[d.screen]} of 4</span></div></div>
       <button class="btn flat" data-act="askDelete">DELETE DRAFT</button><button class="btn primary" data-act="resume">Continue setup</button></div>`
-   :`<div class="empty">${I('people')}<div class="h4">No programs yet</div><button class="btn primary" data-act="start">Create a program</button></div>`;
+   :`<div class="empty">${I('people')}<div class="h4">No programs yet</div><button class="btn primary" data-act="start">Create a program</button>
+     <button class="link cap" data-act="demoAdmin">Prototype shortcut: open the admin UI with a running sample program</button></div>`;
   return `<div class="appbar yellow"><div class="title">${I('menu')}Nectar</div><span class="role">Admin</span></div>
    <div class="content"><div class="page stack"><div><h1 class="h3">Programs</h1><p class="ann">Each program holds its own people, groups, messages and library.</p></div>${body}</div></div>`;
 }
@@ -535,16 +651,17 @@ function scrW4(){
     sections.push(`<table class="sect" id="sec-${g.id}">${cols}<thead><tr class="secthead"><td colspan="3">${title}</td>
       <td>${selectField('tr-'+g.id,'Trainer',g.trainer||'',trainerOpts,{ph:'Choose trainer',act:'setTrainer'})}</td><td></td></tr>
       ${list.length?colHead(g.id,list):''}</thead>
-      <tbody>${list.length?list.map(rowHtml).join(''):`<tr><td colspan="5" class="ann emptyrow">No teachers yet. Choose “${esc(g.name)}” for a teacher above to move them here.</td></tr>`}</tbody></table>`);
+      <tbody>${list.length?list.map(rowHtml).join(''):`<tr><td colspan="5" class="ann emptyrow">No teachers yet. Choose “${esc(g.name)}” for a teacher ${S.screen==='editgroups'?'in another section':'above'} to move them here.</td></tr>`}</tbody></table>`);
   }
-  const menu=S.menuOpen?`<div class="menu">${S.groups.map(g=>{const need=[...S.selected].filter(id=>S.teachers.find(t=>t.id===id).group!==g.id).length;const left=placesLeft(g.id);const dis=need>left;
+  const menu=S.menuOpen?`<div class="menu" style="max-height:min(480px,calc(100vh - 260px));overflow-y:auto">${S.screen==='editgroups'?`<button data-act="egNewGroup" ${sel>MAX?'disabled':''}><span style="display:inline-flex;gap:6px;align-items:center;color:${sel>MAX?'inherit':'var(--primary)'}">${I('add','sm')} Create new group</span><span class="cap">${sel>MAX?`Up to ${MAX} teachers`:''}</span></button><hr style="border:0;border-top:1px solid var(--fine);margin:6px 0">`:''}${S.groups.map(g=>{const need=[...S.selected].filter(id=>S.teachers.find(t=>t.id===id).group!==g.id).length;const left=placesLeft(g.id);const dis=need>left;
       return `<button data-act="bulkMove" data-g="${g.id}" ${dis||need===0?'disabled':''}><span>${esc(g.name)}</span><span class="cap">${left?plural(left,'spot')+' left':'Group full'}</span></button>`}).join('')}
       <button data-act="bulkMove" data-g="">Remove from group</button></div>`:'';
   const u=uAll.length;
   const main=`<div class="page narrow stack">
-    <div><div class="row"><h1 class="h3">Build WhatsApp groups</h1><span class="spacer"></span>
+    ${S.screen==='editgroups'?`<div><h1 class="h3">Edit groups</h1><p class="ann">Up to ${MAX} teachers per group. Choose a new group for a teacher to move them. ${L()?'Teachers you move get the new group’s invite link when you save.':'Invites go out when you launch the program.'}</p></div>`
+    :`<div><div class="row"><h1 class="h3">Build WhatsApp groups</h1><span class="spacer"></span>
       <button class="btn primary" data-act="openAuto">Auto-group</button></div>
-      <p class="ann">Up to ${MAX} teachers per group. Choose a group for each teacher and they move into that group’s section.</p></div>
+      <p class="ann">Up to ${MAX} teachers per group. Choose a group for each teacher and they move into that group’s section.</p></div>`}
     <div class="selbar sticky" id="selbar"><span class="h5">${plural(S.teachers.length,'teacher')} &nbsp;|&nbsp; ${u} ungrouped</span><span class="spacer"></span>
       ${sel?`<span>${sel} selected</span><button class="btn flat" data-act="clearSel">CLEAR</button>`:''}
       <div class="menuwrap"><button class="btn secondary" data-act="toggleMenu" ${sel?'':'disabled'}>MOVE TO GROUP ${I('caret','sm')}</button>${menu}</div></div>
@@ -552,6 +669,7 @@ function scrW4(){
     ${sections.length?sections.join(''):`<p class="ann" style="text-align:center;padding:32px">No teachers match “${esc(S.filter)}”</p>`}
     <div><button class="btn flat" data-act="addGroup">${I('add','sm')}ADD A GROUP</button></div></div>`;
   const toc=`<nav class="toc" aria-label="Jump to a group">${u?`<a href="#sec-u" data-act="jump" data-g="u">Ungrouped <span class="ann">(${u})</span></a>`:''}${S.groups.map(g=>`<a href="#sec-${g.id}" data-act="jump" data-g="${g.id}">${esc(g.name)} <span class="ann">(${members(g.id).length}/${MAX})</span></a>`).join('')}</nav>`;
+  if(S.screen==='editgroups') return editShell(main+toc);
   return wizard(main+toc,{contDisabled:issues().length>0});
 }
 function scrW4c(){
@@ -574,18 +692,34 @@ function scrDone(){
 function render(){
   const a=document.activeElement,fid=a&&a.id,ss=a&&a.selectionStart,se=a&&a.selectionEnd;
   const pnl=document.getElementById('panel'),pst=pnl?pnl.scrollTop:0;
-  const map={programs:scrPrograms,w1:scrW1,w2:scrW2,w3:()=>S.method==='upload'?scrW3Upload():scrW3Manual(),w4:scrW4,w4c:scrW4c,done:scrDone};
+  const map={programs:scrPrograms,w1:scrW1,w2:scrW2,w3:()=>S.method==='upload'?scrW3Upload():scrW3Manual(),w4:scrW4,w4c:scrW4c,done:scrDone,
+    admin:()=>({home:scrHome,schedule:scrSchedule,groups:scrGroups,group:scrGroup,users:scrUsers,library:scrLibrary,settings:scrSettings}[S.ad.tab]||scrHome)(),tpl:scrTpl,upload:scrUpload,editgroups:scrW4};
   let html=map[S.screen]();
-  if(S.snackbar){const nb=S.screen==='programs'||S.screen==='done';html+=`<div class="snackbar ${nb?'nobar':''}" role="status"><span>${esc(S.snackbar.text)}</span>${S.snackbar.undo?'<button class="btn" data-act="undo">UNDO</button>':''}<button class="btn" data-act="dismiss">DISMISS</button></div>`}
+  if(S.snackbar){const nb=S.screen==='programs'||S.screen==='done'||S.screen==='admin';html+=`<div class="snackbar ${nb?'nobar':''}" role="status"><span>${esc(S.snackbar.text)}</span>${S.snackbar.undo?'<button class="btn" data-act="undo">UNDO</button>':''}<button class="btn" data-act="dismiss">DISMISS</button></div>`}
   if(S.modal) html+=modalHtml();
   document.getElementById('app').innerHTML=html;
   const p2=document.getElementById('panel'); if(p2) p2.scrollTop=pst;
   document.querySelectorAll('[data-change=selSection]').forEach(sa=>{const vis=[...sa.closest('table').querySelectorAll('[data-change=selOne]')];const c=vis.filter(x=>x.checked).length;sa.indeterminate=c>0&&c<vis.length});
   if(fid){const el=document.getElementById(fid);if(el){el.focus();try{if(ss!=null)el.setSelectionRange(ss,se)}catch(e){}}}
   if(S.modal){const m=document.querySelector('.modal [data-focus]');if(m&&!fid)m.focus()}
+  wrapTables();
   tocSync();
 }
+// Let wide tables scroll sideways inside their card instead of spilling out.
+// Row menus inside a scrolling table are positioned against the viewport so they aren't clipped.
+function wrapTables(){
+  document.querySelectorAll('.apage table, .page table:not(.sect)').forEach(t=>{
+    if(t.parentElement.classList.contains('tscroll'))return;
+    const w=document.createElement('div');w.className='tscroll';t.parentNode.insertBefore(w,t);w.appendChild(t)});
+  document.querySelectorAll('.tscroll .amenu').forEach(m=>{const btn=m.parentElement.querySelector('.morebtn');if(!btn)return;
+    const r=btn.getBoundingClientRect();m.classList.add('floating');const h=m.offsetHeight,wd=m.offsetWidth;
+    const up=r.bottom+h+8>window.innerHeight&&r.top-h-4>0;
+    m.style.top=(up?r.top-h-4:r.bottom+4)+'px';m.style.left=Math.max(8,Math.min(r.right-wd,window.innerWidth-wd-16))+'px'});
+}
+window.addEventListener('scroll',()=>{if(S.ad&&S.ad.menu&&document.querySelector('.amenu.floating')){S.ad.menu=null;render()}},{passive:true});
+document.addEventListener('scroll',e=>{if(e.target.classList&&e.target.classList.contains('tscroll')&&S.ad&&S.ad.menu){S.ad.menu=null;render()}},true);
 function modalHtml(){
+  if(S.modal&&S.modal.startsWith('a-'))return adminModal();
   if(S.modal==='auto'){const u=ungrouped().length;
     return `<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 class="h4" id="mt">Auto-group teachers</h2>
       <p style="margin-top:12px">${u===0?`Everyone is already in a group. This will reshuffle all ${S.teachers.length} teachers into new groups of up to ${MAX}. You can move anyone afterwards.`:`Place ${u===S.teachers.length?'all '+u:'the '+u+' ungrouped'} teacher${u===1?'':'s'} in groups of up to ${MAX}. You can move anyone afterwards.`}</p>
@@ -718,7 +852,7 @@ const A={
   saveRename(){const v=S.renameVal.trim();if(!v){S.renameErr='Enter a group name';render();return}
     if(S.groups.some(g=>g.id!==S.renaming&&g.name.toLowerCase()===v.toLowerCase())){S.renameErr='Another group already has this name';render();return}
     S.groups.find(g=>g.id===S.renaming).name=v;S.renaming=null;render()},
-  createGroups(){const n=S.groups.length;S.draft=null;snack(`${plural(n,'group')} created`);go('done')}
+  createGroups(){const n=S.groups.length;S.draft=null;S.ad=seedFromWizard();snack(`${plural(n,'group')} created. Launch the program when you’re ready to send invites.`);aGo('home')}
 };
 const CH={
   method(el){S.method=el.value;render()},
@@ -752,6 +886,770 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&S.modal){S.modal=null;render()}
   if(e.key==='Escape'&&S.menuOpen){S.menuOpen=false;render()}
 });
+const andList=a=>a.length<=1?a.join(""):a.slice(0,-1).join(", ")+" and "+a.at(-1);
+/* =====================================================================
+   ADMIN UI
+   ===================================================================== */
+Object.assign(P,{
+ dash:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
+ clock:'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z',
+ groups:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 17.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5zM9.5 8a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zm6.5 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z',
+ library:'M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z',
+ gear:'M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.01-1.58zM12 15.6a3.6 3.6 0 110-7.2 3.6 3.6 0 010 7.2z',
+ mail:'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z',
+ check:'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+ pause:'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
+ more:'M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+ chevL:'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', chevR:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
+ person:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'
+});
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const START=new Date(2027,0,18); // Monday of week 1
+const NOW=new Date(2027,0,21,16,32);
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const fmtD=d=>`${d.getDate()} ${MONS[d.getMonth()]}`;
+const fmtDay=d=>DAYS[d.getDay()].slice(0,3)+' '+fmtD(d);
+function rel(min){if(min==null)return '—';const m=Math.round(min);
+  if(m<60)return m<=1?'1 minute ago':m+' minutes ago';const h=Math.floor(m/60);if(h<24)return h===1?'1 hour ago':h+' hours ago';
+  const d=Math.floor(h/24);if(d<28)return d===1?'1 day ago':d+' days ago';if(d<365){const mo=Math.max(1,Math.floor(d/30));return mo===1?'1 month ago':mo+' months ago'}
+  const y=Math.floor(d/365);return y===1?'1 year ago':y+' years ago'}
+function absT(min){const d=new Date(NOW.getTime()-min*60000);return `${DAYS[d.getDay()].slice(0,3)} ${fmtD(d)} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} EAT`}
+const relCell=min=>min==null?'<span class="ann">—</span>':`<span class="tip" data-tip="${absT(min)}">${rel(min)}</span>`;
+const STC={sent:['Sent','mail','#e8edff','#2f4fc9'],approved:['Approved','check','#e3f5e8','#1b7d36'],pending:['Pending','clock','#fff3cd','#8a6100'],rejected:['Rejected','err','#ffe5e1','#c21b00'],paused:['Paused','pause','#eeeeee','#555'],draft:['Draft','edit','#eeeeee','#555'],
+  joined:['Joined','check','#e3f5e8','#1b7d36'],invited:['Invited','clock','#fff3cd','#8a6100'],notinv:['Not invited',null,'#eeeeee','#555']};
+const chip=(k,label)=>{const c=STC[k];return `<span class="chip ${c[1]?'':'nolead'}" style="background:${c[2]};color:${c[3]}">${c[1]?I(c[1]):''}${esc(label||c[0])}</span>`};
+const BOT='<span class="bot">BOT</span>';
+const more=(id,items,up)=>`<span class="menuwrap" style="display:inline-block"><button class="morebtn" data-act="amenu" data-id="${id}" aria-label="More options">${I('more','sm')}</button>${S.ad.menu===id?`<div class="amenu ${up?'up':''}">${items}</div>`:''}</span>`;
+const mi=(label,act,data='',{dis,danger}={})=>`<button data-act="${act}" ${data} ${dis?'disabled':''} class="${danger?'danger':''}">${label}</button>`;
+const selF=(id,label,val,opts,model)=>selectField(id,label,val,opts.map(o=>typeof o==='string'?{v:o,t:o}:o),{model});
+const sortH=(scope,k,label)=>{const s=S.ad.sort[scope]||{};return `<button class="sorth ${s.k===k?'on':''}" data-act="asort" data-scope="${scope}" data-k="${k}">${label}${I(s.k===k?(s.d>0?'up':'caret'):'sort','sm')}</button>`};
+function sortBy(scope,arr,getters){const s=S.ad.sort[scope];if(!s||!getters[s.k])return arr;const g=getters[s.k];
+  return [...arr].sort((a,b)=>{const x=g(a),y=g(b);const r=(x==null)-(y==null)||(typeof x==='number'?x-y:String(x).localeCompare(String(y)));return r*s.d})}
+const L=()=>S.ad.launched;
+
+/* ---------------- seed data ---------------- */
+const TRAINERS=[['Ruth Okot','Tororo','201'],['James Odongo','Tororo','202'],['Agnes Nabirye','Busia','203'],['Moses Okwi','Butaleja','204'],['Peter Wanyama','Mbale','205'],['Lydia Namono','Pallisa','206']];
+const GROUPS=[['Tororo · Biology S2','Ruth Okot',7,0,120],['Tororo · Chemistry S3','Ruth Okot',6,0,1440],['Tororo · Physics S1','James Odongo',7,2,35],['Busia · Biology S2','Agnes Nabirye',7,0,4320],['Busia · Chemistry S3',null,6,0,4320],['Busia · Maths S1','Agnes Nabirye',7,0,12],['Butaleja · Biology S2','Moses Okwi',5,1,1200],['Butaleja · Physics S3',null,6,0,23040],['Mbale · Chemistry S2','Peter Wanyama',7,0,2880],['Mbale · Maths S3','Peter Wanyama',6,0,25920],['Pallisa · Biology S1','Lydia Namono',6,0,4320],['Pallisa · Maths S2','Lydia Namono',7,0,300],['Tororo · Maths S2','James Odongo',6,0,600],['Busia · Physics S2','Agnes Nabirye',5,0,43200],['Butaleja · Chemistry S1','Moses Okwi',6,0,2880],['Mbale · Biology S3','Peter Wanyama',7,0,300],['Pallisa · Chemistry S3','Lydia Namono',6,0,12960],['Tororo · Physics S3','Ruth Okot',6,0,240]];
+const SCH={Tororo:['Tororo College','Rock High School','Mundika Secondary School'],Busia:['Busia Secondary School','Nkoma Secondary School','Kamuge High School'],Butaleja:['Butaleja Seed Secondary School','Busolwe Secondary School'],Mbale:['Mbale Secondary School','Nkoma Secondary School'],Pallisa:['Pallisa Secondary School','Kamuge High School']};
+const DISTRICTS=['Busia','Butaleja','Mbale','Pallisa','Tororo'];
+function seedAdmin(){
+  let n=100;const ph=()=>'+256 772 ••• '+(n++);
+  const trainers=TRAINERS.map(([name,district,num])=>({id:nid('t'),name,district,phone:'+256 772 ••• '+num,role:'trainer',school:'',subjects:'',wa:'joined',last:null}));
+  const tId=nm=>trainers.find(t=>t.name===nm)?.id||null;
+  const groups=GROUPS.map(([name,tr,count,invited,act])=>({id:nid('g'),name,district:name.split(' · ')[0],trainer:tId(tr),last:act,_c:count,_i:invited}));
+  const first=['Aisha','Alex','Annet','Benjamin','Brenda','Christine','Collins','Denis','Doreen','Edward','Eunice','Fred','Gloria','Hassan','Irene','Jacob','Janet','Joseph','Josephine','Juliet','Kenneth','Lilian','Martin','Mary','Michael','Monica','Nelson','Patience','Peace','Richard','Ronald','Scovia','Stella','Steven','Teddy','Timothy','Vincent','Winnie','Yusuf','Brian','Florence','Esther'];
+  const last=['Wafula','Nambozo','Barasa','Opolot','Kiiza','Mukasa','Auma','Oboth','Nangobi','Egesa','Namutebi','Ochola','Akol','Mugisha','Nakato','Ojambo','Akiror','Wasike','Atuhaire','Etyang','Namusoke','Odoi','Achom','Kato','Naigaga','Adongo','Ekwaru','Amoit'];
+  const used=new Set();let k=0;
+  const nextName=()=>{let nm;do{nm=first[(k*7)%first.length]+' '+last[(k*11+Math.floor(k/first.length))%last.length];k++}while(used.has(nm));used.add(nm);return nm};
+  const fixed=['Grace Akello','Sarah Namukasa','Robert Okello','Daniel Emojong','Joy Apio','Mercy Atim','Paul Etyang'];fixed.forEach(x=>used.add(x));
+  ['Betty Akello','Charles Ochieng','Isaac Omoding'].forEach(x=>used.add(x));
+  const teachers=[];
+  groups.forEach((g,gi)=>{const subj=g.name.split(' · ')[1].split(' ')[0];const lastPosts=[120,140,600,4320,null,null,null];
+    for(let i=0;i<g._c;i++){const name=gi===0?fixed[i]:nextName();const notJoined=i>=g._c-g._i;
+      teachers.push({id:nid('p'),name,phone:ph(),district:g.district,school:SCH[g.district][(i+gi)%SCH[g.district].length],subjects:i%3===2?subj+', Chemistry':subj,role:'teacher',group:g.id,wa:notJoined?'invited':'joined',last:notJoined?null:(gi===0?lastPosts[i]:[60*(i+2),null,1440*(i+1),300,null,4320,8640][(i+gi)%7])})}
+    delete g._c;delete g._i});
+  [['Betty Akello','156','Nkoma Secondary School','Biology'],['Charles Ochieng','166','Kamuge High School','Maths'],['Isaac Omoding','163','Nkoma Secondary School','Maths']].forEach(([name,num,school,subjects])=>teachers.push({id:nid('p'),name,phone:'+256 772 ••• '+num,district:'Busia',school,subjects,role:'teacher',group:null,wa:'notinv',last:null}));
+  return {launched:true,tab:'home',sort:{},menu:null,q:{},f:{},week:0,cal:false,calMonth:0,range:'7',
+    trainers,groups,teachers,templates:seedTemplates(),files:seedFiles(),bannerU:true,bannerG:true,sel:new Set(),gtab:'conv',group:null,shown:25};
+}
+function seedFromWizard(){const a=seedAdmin();a.launched=false;
+  if(S.groups.length&&S.teachers.length){
+    a.trainers=S.trainers.map(t=>({id:t.id,name:t.name,district:t.district,phone:t.phone,role:'trainer',school:t.school||'',subjects:t.subjects||'',wa:'joined',last:null}));
+    a.groups=S.groups.map(g=>({id:g.id,name:g.name,district:members(g.id)[0]?.district||'',trainer:g.trainer||null,last:null}));
+    a.teachers=S.teachers.map(t=>({id:t.id,name:t.name,phone:t.phone,district:t.district,school:t.school||'',subjects:t.subjects||'',role:'teacher',group:t.group,wa:'notinv',last:null}));}
+  return a}
+function seedTemplates(){
+  const T=(id,name,desc,type,author,rec,freq,sched,created,status,extra={})=>({id,name,desc,type,author,rec,freq,sched,created,status,...extra});
+  return [
+   T('across','Across the circles','Shared themes from all groups. No names.','Automatic','Nectar','Groups','Every 2nd Wednesday','Wed 3 Feb · 16:00 EAT','4 Jan 2027','approved',{body:['Across the circles this week: ',{v:'themes'},' Themes only, no names.']}),
+   T('invite','Group invite','Meta’s invite link template, to join the group.','Automatic','Nectar','Teachers','When a group is created',null,'4 Jan 2027','approved',{trigger:true,body:['Hi! ',{v:'trainer'},' has invited you to join ',{v:'group'},' on WhatsApp.']}),
+   T('joinrem','Join reminder','One reminder for teachers who haven’t joined.','Automatic','Nectar','Teachers','2 days after the invite',null,'4 Jan 2027','approved',{trigger:true,body:['Reminder: your group ',{v:'group'},' is waiting for you. Tap the link to join.']}),
+   T('midterm','Mid-term break','Circles pause for mid-term break, 15 – 19 Feb.','Announcement','Grace Akello','Groups','Once','Fri 22 Jan · 10:00 EAT','18 Jan 2027','pending',{body:['Circles pause for mid-term break, 15 – 19 Feb. The next prompt arrives on ',{v:'nextdate'},'.']}),
+   T('review','Prompt for review','Next week’s prompt, for trainers to approve.','Prompt','Kenneth Oroma','Trainers','Every Thursday','Thu 21 Jan · 17:00 EAT','4 Jan 2027','approved',{body:['Next week’s prompt for ',{v:'group'},': What is one thing you tried this week because of something a colleague shared?']}),
+   T('quiet','Quiet group alert','Tells the trainer a group has gone quiet.','Automatic','Nectar','Trainers','After 2 weeks with no replies',null,'4 Jan 2027','approved',{trigger:true,triggerLabel:'Send when a group has no replies for',triggerVal:'2 weeks',body:['Your group ',{v:'group'},' has had no replies for ',{v:'weeksquiet'},' weeks. Reply 1 to see ideas for restarting the conversation, or 2 to leave it for now.']}),
+   T('nudge','Quiet group nudge','A light prompt to restart a quiet group.','Automatic','Nectar','Groups','When a trainer restarts a quiet group',null,'19 Jan 2027','pending',{trigger:true,body:['It’s been quiet here! What’s one small win from your classroom this week?']}),
+   T('reflect','Reflect privately invitation','Invites a teacher to reflect 1:1 with the bot.','Automatic','Nectar','Teachers','After a teacher reacts to the prompt',null,'4 Jan 2027','approved',{trigger:true,body:['Want to think this through privately? Reply REFLECT and I’ll ask you a few questions.']}),
+   T('privacy','Remove private information','Asks a teacher to delete a message with student details.','Automatic','Nectar','Teachers','When student information is posted',null,'4 Jan 2027','approved',{trigger:true,body:['Your last message may include a student’s private information. Please delete it from the group.']}),
+   T('ontopic','Stay on topic reminder','A gentle reminder to keep the chat on teaching.','Automatic','Nectar','Groups','When a trainer acts on a flag',null,'6 Jan 2027','paused',{trigger:true,body:['A quick reminder: this circle is for sharing teaching moments. Thanks for keeping it on topic!']}),
+   T('digest','Weekly digest','Each trainer’s weekly digest, attached as a PDF.','Automatic','Nectar','Trainers','Every Thursday','Thu 21 Jan · 17:00 EAT','4 Jan 2027','rejected',{reason:'template body cannot end in a variable',media:{state:'done',file:'digest-sample.pdf',meta:'Sample for Meta review · PDF · 3 pages · 180 KB',kind:'PDF'},day:'Thursday',time:'17:00',repeat:'Weekly',body:['Hi ',{v:'trainer'},', here’s the digest for your circles for ',{v:'weekdates'},'. Open the file to see what they talked about.'],footer:'Sent every Thursday'}),
+   T('weekly','Weekly prompt','The week’s reflection question.','Prompt','Kenneth Oroma','Groups','Every Monday','Mon 25 Jan · 08:00 EAT','5 Jan 2027','approved',{date:'Mon 25 Jan 2027',time:'08:00',repeat:'Weekly',header:['Week ',{v:'week'},' reflection'],body:['Hi ',{v:'group'},'! This week’s question: what is one thing you tried because of something a colleague shared? Share a bright spot here, or reply REFLECT to think it through privately.'],footer:'Only your circle sees your replies.'}),
+   T('checkin','Weekly check-in','Reply with one word that describes your teaching this week.','Prompt','Kenneth Oroma','Groups','Every Sunday','Sun 24 Jan · 18:00 EAT','5 Jan 2027','paused',{body:['Reply with one word that describes your teaching this week, and one thing you want to try next week.']})
+  ];
+}
+function seedFiles(){return [
+  ['Weekly digests · 18–24 Jan','6 PDFs · 1.1 MB','Document','Weekly digest · sent Thu 21 Jan','Nectar','21 Jan 2027','#9e9e9e','6'],
+  ['digest-sample.pdf','180 KB','Document','Weekly digest (sample for Meta)','Kenneth Oroma','4 Jan 2027','#e53935','PDF'],
+  ['group-norms.pdf','240 KB','Document','Welcome + norms (header)','Kenneth Oroma','4 Jan 2027','#e53935','PDF'],
+  ['lesson-study-clip.mp4','12.4 MB','Video',null,'Ruth Okot','12 Jan 2027','#7e57c2','MP4'],
+  ['midterm-break-poster.png','610 KB','Image','Mid-term break (header)','Grace Akello','18 Jan 2027','#5c8ee6','IMG'],
+  ['tororo_roster.csv','14 KB','Spreadsheet','Program setup (people)','Kenneth Oroma','4 Jan 2027','#2e9d5b','CSV'],
+  ['trainer-visit-week-4.jpg','840 KB','Image','Visit from your trainer (header)','Grace Akello','18 Jan 2027','#5c8ee6','IMG'],
+  ['weekly-prompts-term-1.csv','9 KB','Spreadsheet','Weekly prompt (12-week sequence)','Kenneth Oroma','5 Jan 2027','#2e9d5b','CSV']
+ ].map(([name,size,type,used,by,added,col,ext])=>({id:nid('f'),name,size,type,used,by,added,col,ext}))}
+
+/* ---------------- lookups ---------------- */
+const AD=()=>S.ad;
+const grp=id=>AD().groups.find(g=>g.id===id);
+const trn=id=>AD().trainers.find(t=>t.id===id);
+const gMembers=id=>AD().teachers.filter(t=>t.group===id);
+const waOf=p=>L()?p.wa:(p.wa==='joined'||p.wa==='invited'?'notinv':p.wa);
+const lastOf=p=>L()?p.last:null;
+const progName=()=>S.program.name||'Tororo Science & Maths pilot';
+const initials=n=>n.split(' ').map(x=>x[0]).slice(0,2).join('');
+const AV_COL=['#e0533b','#2f8f6f','#6a5acd','#d98b1f','#3a7bd5','#c2185b'];
+const avatar=n=>`<span class="avatar" style="background:${AV_COL[[...n].reduce((s,c)=>s+c.charCodeAt(0),0)%AV_COL.length]}">${initials(n)}</span>`;
+
+/* ---------------- shell ---------------- */
+const TABS=[['home','Program','dash'],['schedule','Schedule','clock'],['groups','Groups','groups'],['users','Users','people'],['library','Library','library'],['settings','Settings','gear']];
+function ashell(tab,inner){
+  return `<div class="appbar yellow admin"><button class="brand" data-act="toPrograms" title="All programs">${I('menu')}Nectar</button>
+    <nav class="navtabs">${TABS.map(([k,l,ic])=>`<button class="navtab ${tab===k?'on':''}" data-act="atab" data-tab="${k}">${I(ic)}${l}</button>`).join('')}</nav>
+    <span class="user">${I('person')}Admin</span></div><div class="acontent">${inner}</div>`;
+}
+function fullShell(title,inner,{left='',buttons=''}={}){
+  return `<div class="appbar black"><div class="title">${esc(title)}</div><button class="btn white" data-act="fsCancel">CANCEL</button></div>
+   <div class="content">${inner}</div>
+   <div class="bottombar"><span class="ann">${left}</span><span class="spacer"></span>${buttons}</div>`;
+}
+function aGo(tab,extra={}){S.ad.tab=tab;S.ad.menu=null;Object.assign(S.ad,extra);S.screen='admin';S.menuOpen=false;window.scrollTo(0,0);render()}
+
+/* ---------------- schedule data ---------------- */
+function weekItems(off){
+  if(off<0) return [];
+  const wk=off+1;
+  if(off===0) return [
+   {day:0,time:'08:00',title:'Weekly prompt',desc:'Week 1 · Think of a moment this week when a learner surprised you. What did they do, and what did you do next?',type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:'sent',tpl:'weekly'},
+   {day:2,time:'16:00',title:'Across the circles',desc:'Shared summary, generated from this week’s group discussions. Themes only, no names.',type:'Automatic',author:'Nectar',rec:'18 groups',to:'All groups',status:'sent',tpl:'across'},
+   {day:3,time:'17:00',title:'Weekly digest',desc:'Hi Ruth Okot, here’s the digest for your circles for 18 – 24 Jan. (PDF attached)',type:'Automatic',author:'Nectar',rec:'6 trainers',to:'Ruth Okot',status:'rejected',tpl:'digest'},
+   {day:3,time:'17:00',title:'Prompt for review',desc:'Week 2 · What is one thing you tried this week because of something a colleague shared?',type:'Prompt',author:'Kenneth Oroma',rec:'6 trainers',to:'Ruth Okot',status:S.ad.tplStatus?.review||'approved',tpl:'review',act:'EDIT PROMPT'},
+   {day:4,time:'10:00',title:'Mid-term break',desc:'Circles pause for mid-term break, 15 – 19 Feb. The next prompt arrives on Monday 22 Feb.',type:'Announcement',author:'Grace Akello',rec:'18 groups',to:'All groups',status:'pending',tpl:'midterm'},
+   {day:6,time:'09:00',note:'Edits to Monday’s prompt close'},
+   {day:6,time:'18:00',title:'Weekly check-in',desc:'Week 1 · Reply with one word that describes your teaching this week, and one thing you want to try next week.',type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:'paused',tpl:'checkin'}];
+  const qs=['What is one thing you tried this week because of something a colleague shared?','Describe a question a learner asked that made you think.','What did you change in a lesson after it didn’t go as planned?','Share one way you checked understanding this week.'];
+  return [
+   {day:0,time:'08:00',title:'Weekly prompt',desc:`Week ${wk} · ${qs[(wk-2)%qs.length]}`,type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:'approved',tpl:'weekly'},
+   ...(wk%2===1?[{day:2,time:'16:00',title:'Across the circles',desc:'Shared summary, generated from this week’s group discussions. Themes only, no names.',type:'Automatic',author:'Nectar',rec:'18 groups',to:'All groups',status:'approved',tpl:'across'}]:[]),
+   {day:3,time:'17:00',title:'Weekly digest',desc:`Hi Ruth Okot, here’s the digest for your circles. (PDF attached)`,type:'Automatic',author:'Nectar',rec:'6 trainers',to:'Ruth Okot',status:'rejected',tpl:'digest'},
+   {day:3,time:'17:00',title:'Prompt for review',desc:`Week ${wk+1} · ${qs[(wk-1)%qs.length]}`,type:'Prompt',author:'Kenneth Oroma',rec:'6 trainers',to:'Ruth Okot',status:'approved',tpl:'review',act:'EDIT PROMPT'},
+   {day:6,time:'18:00',title:'Weekly check-in',desc:`Week ${wk} · Reply with one word that describes your teaching this week, and one thing you want to try next week.`,type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:S.ad.checkinStatus||'paused',tpl:'checkin'}];
+}
+const dispStatus=st=>(!L()&&st==='sent')?'approved':st;
+const actLabel=it=>{const s=dispStatus(it.status);return s==='sent'?'VIEW':s==='rejected'?'FIX':s==='paused'?'RESUME':(it.act||'EDIT')};
+function itemStatus(it){if(it.tpl==='checkin')return S.ad.checkinStatus||it.status;const t=S.ad.templates.find(x=>x.id===it.tpl);if(t&&it.status!=='sent'&&['pending','rejected'].includes(t.status))return t.status;return it.status}
+function weekTable(off,{sentTo=false}={}){
+  const items=weekItems(off).map(it=>it.note?it:{...it,status:itemStatus(it)});const mon=addDays(START,off*7);
+  const rows=[];
+  for(let d=0;d<7;d++){
+    const date=addDays(mon,d);const its=items.filter(i=>i.day===d);
+    const dayCells=(first)=>`<td style="font-weight:600">${first?DAYS[date.getDay()]:''}</td><td style="font-weight:600">${first?fmtD(date):''}</td>`;
+    if(!its.length){rows.push(`<tr class="nothing day-last">${dayCells(true)}<td></td><td colspan="7" class="ann">${off<0&&d===0?'Nothing scheduled · the program starts on Mon 18 Jan':'Nothing scheduled'}</td></tr>`);continue}
+    its.forEach((it,i)=>{const last=i===its.length-1;const cls=last?'day-last':'in-day';
+      if(it.note){rows.push(`<tr class="${cls}">${dayCells(i===0)}<td>${it.time} EAT</td><td colspan="7"><span class="note">${I('info','sm')}${esc(it.note)}</span></td></tr>`);return}
+      const st=dispStatus(it.status);
+      rows.push(`<tr class="${cls}">${dayCells(i===0)}<td>${it.time} EAT</td>
+        <td><div style="font-weight:600">${esc(it.title)}</div><span class="ann trunc" style="max-width:300px">${esc(it.desc)}</span></td>
+        <td class="ann">${it.type}</td><td>${esc(it.author)}${it.author==='Nectar'?BOT:''}</td><td>${sentTo?esc(it.to):esc(it.rec)}</td>
+        <td>${chip(st)}</td><td style="text-align:right"><button class="btn flat" style="color:#000" data-act="itemAct" data-tpl="${it.tpl}" data-st="${st}">${actLabel({...it,status:st})}</button></td></tr>`)});
+  }
+  return `<table class="atable wk"><colgroup><col style="width:108px"><col style="width:66px"><col style="width:92px"><col><col style="width:112px"><col style="width:140px"><col style="width:96px"><col style="width:116px"><col style="width:118px"></colgroup>
+    <thead><tr><th>Day</th><th>Date</th><th>Time</th><th>Message</th><th>Type</th><th>Author</th><th>${sentTo?'Sent to':'Recipients'}</th><th>Status</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function weekNav(){
+  const mon=addDays(START,S.ad.week*7),sun=addDays(mon,6);
+  const label=`${mon.getDate()}${mon.getMonth()!==sun.getMonth()?' '+MONS[mon.getMonth()].toUpperCase():''} – ${sun.getDate()} ${MONS[sun.getMonth()].toUpperCase()} ${sun.getFullYear()}`;
+  let cal='';
+  if(S.ad.cal){const base=new Date(2027,S.ad.calMonth,1);const startOff=(base.getDay()+6)%7;const gridStart=addDays(base,-startOff);
+    const cells=[];for(let i=0;i<42;i++){const d=addDays(gridStart,i);const wo=Math.floor((d-START)/864e5/7);const inWk=wo===S.ad.week&&d>=START||(S.ad.week<0&&wo===S.ad.week);
+      cells.push(`<button class="${d.getMonth()!==base.getMonth()?'out':''} ${Math.floor((d-addDays(START,S.ad.week*7))/864e5)>=0&&Math.floor((d-addDays(START,S.ad.week*7))/864e5)<7?'wk':''}" data-act="pickDay" data-off="${Math.floor((d-START)/864e5/7)}">${d.getDate()}</button>`)}
+    cal=`<div class="calpop menuwrap"><div class="row" style="justify-content:space-between"><button class="iconbtn" data-act="calMonth" data-d="-1">${I('chevL','sm')}</button><b>${MONL[base.getMonth()]} ${base.getFullYear()}</b><button class="iconbtn" data-act="calMonth" data-d="1">${I('chevR','sm')}</button></div>
+      <div class="calgrid">${['M','T','W','T','F','S','S'].map(x=>`<span>${x}</span>`).join('')}${cells.join('')}</div></div>`}
+  return `<div class="weeknav"><button class="btn secondary" data-act="thisWeek">THIS WEEK</button>
+    <span class="menuwrap"><button class="btn flat" style="color:#000" data-act="toggleCal">${label} ${I('caret','sm')}</button></span>
+    <button class="iconbtn" data-act="weekStep" data-d="-1" title="Previous week">${I('chevL')}</button><button class="iconbtn" data-act="weekStep" data-d="1" title="Next week">${I('chevR')}</button>${cal}</div>`;
+}
+
+/* ---------------- home ---------------- */
+const RANGES=[['7','Last 7 days',[86,'1,240',15]],['14','Last 2 weeks',[94,'2,310',16]],['30','Last month',[101,'3,880',17]],['90','Last 3 months',[101,'3,880',17]],['180','Last 6 months',[101,'3,880',17]],['365','Last 12 months',[101,'3,880',17]],['all','All time',[101,'3,880',17]]];
+function scrHome(){
+  const a=AD();const r=RANGES.find(x=>x[0]===a.range);const tot=a.teachers.length,ng=a.groups.length;
+  const stat=(label,val,sub)=>`<div><div class="ann">${label}</div><div class="statv">${val}</div><div class="cap">${sub}</div></div>`;
+  const stats=L()?`${stat('Active teachers',Math.round(r[2][0]/tot*100)+'%',`${r[2][0]} of ${tot} teachers shared posts`)}${stat('Messages sent',r[2][1],'From teachers')}${stat('Active groups',`${r[2][2]} <span class="ann" style="font-size:14px;font-weight:400">of ${ng}</span>`,'With at least one post')}`
+    :['Active teachers','Messages sent','Active groups'].map(l=>stat(l,'—','Shows once the program launches')).join('');
+  const items=L()?weekItems(0).filter(i=>!i.note).map(it=>({...it,status:itemStatus(it)})):[];
+  const rows=items.map(it=>{const st=dispStatus(it.status);const d=addDays(START,it.day);return `<tr><td><div style="font-weight:600">${fmtDay(d)}</div><div>${it.time} EAT</div></td>
+    <td><div style="font-weight:600">${esc(it.title)}</div><span class="ann trunc" style="max-width:520px">${esc(it.desc)}</span></td><td>${esc(it.rec)}</td><td>${chip(st)}</td>
+    <td style="text-align:right"><button class="btn flat" style="color:#000" data-act="itemAct" data-tpl="${it.tpl}" data-st="${st}">${actLabel({...it,status:st})}</button></td></tr>`}).join('');
+  const rangeMenu=a.menu==='range'?`<div class="amenu">${RANGES.map(x=>`<button class="${x[0]===a.range?'opt-sel':''}" data-act="setRange" data-r="${x[0]}">${x[1]}</button>`).join('')}</div>`:'';
+  const optMenu=a.menu==='opts'?`<div class="amenu">${mi('Edit program details','notInProto')}${mi('Duplicate program','notInProto')}<hr>${mi('Archive program','notInProto','',{danger:true})}</div>`:'';
+  return ashell('home',`<div class="apage">
+    <div class="ahead"><h1 class="h3" style="font-size:28px">${esc(progName())}</h1>
+      <span class="menuwrap"><button class="btn secondary" data-act="amenu" data-id="opts">OPTIONS ${I('caret','sm')}</button>${optMenu}</span>
+      ${L()?'':'<button class="btn primary" data-act="askLaunch">LAUNCH PROGRAM</button>'}</div>
+    <div class="row" style="margin:20px 0 16px"><h2 class="h4" style="flex:1">Activity</h2>
+      <span class="menuwrap"><button class="btn secondary" data-act="amenu" data-id="range">${r[1].toUpperCase()} ${I('caret','sm')}</button>${rangeMenu}</span></div>
+    <div class="stats">${stats}</div></div>
+   <div class="apage"><div class="ahead"><div style="flex:1"><h2 class="h4">This week</h2><div class="ann">Mon 18 – Sun 24 Jan</div></div><button class="btn secondary" data-act="atab" data-tab="schedule">VIEW FULL SCHEDULE</button></div>
+    ${rows?`<table class="atable" style="margin-top:16px"><colgroup><col style="width:130px"><col><col style="width:120px"><col style="width:130px"><col style="width:120px"></colgroup><thead><tr><th>Time</th><th>Message</th><th>Recipients</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+      :`<div class="empty" style="padding:40px 0"><div class="h5">Nothing scheduled this week</div><div class="ann">Messages start going out once you launch the program.</div></div>`}</div>`);
+}
+
+/* ---------------- schedule ---------------- */
+function scrSchedule(){
+  const a=AD();const sub=a.stab||'cal';
+  let body;
+  if(sub==='cal') body=`${weekNav()}${weekTable(a.week)}`;
+  else body=templatesTable();
+  return ashell('schedule',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Schedule</h1><button class="btn primary" data-act="newTpl">NEW TEMPLATE</button></div>
+    <div class="subtabs"><button class="subtab ${sub==='cal'?'on':''}" data-act="stab" data-s="cal">Calendar</button><button class="subtab ${sub==='tpl'?'on':''}" data-act="stab" data-s="tpl">Templates</button></div>${body}</div>`);
+}
+function templatesTable(){
+  const a=AD();const q=(a.q.tpl||'').toLowerCase();const fs=a.f.tplStatus||'',ft=a.f.tplType||'';
+  let list=a.templates.filter(t=>(!q||(t.name+' '+t.desc).toLowerCase().includes(q))&&(!fs||t.status===fs)&&(!ft||t.type===ft));
+  list=sortBy('tpl',list,{name:t=>t.name,type:t=>t.type,sched:t=>t.sched,created:t=>t.created,status:t=>t.status});
+  if(!a.sort.tpl) list=[...list].sort((x,y)=>x.name.localeCompare(y.name));
+  const rows=list.map((t,i)=>`<tr><td><button class="gl" data-act="openTpl" data-id="${t.id}">${esc(t.name)}</button><span class="ann trunc" style="max-width:200px">${esc(t.desc)}</span></td>
+    <td class="ann">${t.type}</td><td>${esc(t.author)}${t.author==='Nectar'?BOT:''}</td><td>${t.rec}</td><td>${esc(t.freq)}</td>
+    <td>${t.sched?t.sched.replace(' · ','<br><span class="ann">')+'</span>':'<span class="ann">—</span>'}</td><td>${t.created}</td><td>${chip(t.status)}</td>
+    <td>${more('tpl-'+t.id,mi('View / edit','openTpl',`data-id="${t.id}"`)+mi('Archive','archiveTpl',`data-id="${t.id}"`)+mi('Delete','askDelTpl',`data-id="${t.id}"`,{danger:true}),i>list.length-3)}</td></tr>`).join('');
+  return `<div class="toolbar"><div class="filter">${I('search','sm')}<input id="q-tpl" placeholder="Search messages" value="${esc(a.q.tpl||'')}" data-model="ad.q.tpl" data-live="1"></div>
+    ${selF('f-ts','Status',fs,[{v:'',t:'All'},{v:'approved',t:'Approved'},{v:'pending',t:'Pending'},{v:'rejected',t:'Rejected'},{v:'paused',t:'Paused'},{v:'draft',t:'Draft'}],'ad.f.tplStatus')}
+    ${selF('f-tt','Type',ft,[{v:'',t:'All'},'Prompt','Announcement','Automatic'],'ad.f.tplType')}</div>
+    <table class="atable"><colgroup><col style="width:22%"><col style="width:100px"><col style="width:140px"><col style="width:90px"><col><col style="width:110px"><col style="width:100px"><col style="width:120px"><col style="width:48px"></colgroup>
+    <thead><tr><th>${sortH('tpl','name','Message')}</th><th>${sortH('tpl','type','Type')}</th><th>Author</th><th>Recipients</th><th>Frequency</th><th>${sortH('tpl','sched','Scheduled')}</th><th>${sortH('tpl','created','Created')}</th><th>${sortH('tpl','status','Status')}</th><th></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="9" class="ann" style="text-align:center;padding:32px">No templates match</td></tr>'}</tbody></table>`;
+}
+
+/* ---------------- template editor ---------------- */
+const VARS={
+  program:{label:'Program name',sample:()=>progName()},
+  org:{label:'Organization name',sample:()=>S.program.partner||'Asante Africa'},
+  enddate:{label:'Program end date',sample:()=>'9 Apr 2027'},
+  week:{label:'Week number',sample:()=>'4',opts:()=>['1','2','3','4','5','6']},
+  group:{label:'Group name',sample:()=>AD().groups[0]?.name||'Group 1',opts:()=>AD().groups.map(g=>g.name)},
+  trainer:{label:'Trainer name',sample:()=>'Ruth Okot',opts:()=>AD().trainers.map(t=>t.name)},
+  district:{label:'District',sample:()=>'Tororo',opts:()=>DISTRICTS},
+  nextdate:{label:'Next prompt date',sample:()=>'Mon 15 Feb',opts:()=>['Mon 8 Feb','Mon 15 Feb','Mon 22 Feb']},
+  weekdates:{label:'Week dates',sample:()=>'18 – 24 Jan',opts:()=>['18 – 24 Jan','25 – 31 Jan']},
+  weeksquiet:{label:'Weeks quiet',sample:()=>'2',opts:()=>['2','3','4']},
+  themes:{label:'Shared themes',sample:()=>'groups shared ways to use everyday objects in practicals.'}
+};
+const tokVal=t=>typeof t==='string'?t:(t.s||VARS[t.v].sample());
+const tokText=arr=>(arr||[]).map(tokVal).join('');
+function norm(arr){const out=[];for(const t of arr||[]){if(typeof t==='string'){if(typeof out.at(-1)==='string')out[out.length-1]+=t;else out.push(t)}else{if(typeof out.at(-1)!=='string')out.push('');out.push(t)}}if(typeof out.at(-1)!=='string')out.push('');if(!out.length)out.push('');return out}
+const deep=o=>JSON.parse(JSON.stringify(o));
+function openEditor(id,opts={}){
+  const t=id?AD().templates.find(x=>x.id===id):null;
+  const e=t?{isNew:false,id:t.id,kind:t.type,name:t.name,status:t.status,trigger:!!t.trigger,triggerLabel:t.triggerLabel,triggerVal:t.triggerVal||'2 weeks',
+      date:t.date||(t.sched?t.sched.split(' · ')[0]+' 2027':'Mon 8 Feb 2027'),time:t.time||(t.sched?t.sched.split(' · ')[1].replace(' EAT',''):'08:00'),repeat:t.repeat||(t.freq==='Once'?'Does not repeat':'Weekly'),day:t.day||'Thursday',
+      recMode:t.recMode||{Groups:'allGroups',Trainers:'allTrainers',Teachers:'fixed'}[t.rec]||'allGroups',recFixed:t.rec==='Teachers'?'Teachers who haven’t joined':'',recDistrict:t.recDistrict||'',recGroups:t.recGroups||[],recTrainers:t.recTrainers||[],
+      headerType:t.media?'media':'text',header:norm(deep(t.header||[])),body:norm(deep(t.body||[''])),footer:t.footer||'',media:t.media?deep(t.media):{state:'empty'},reason:t.reason,sent:opts.sent}
+    :{isNew:true,kind:opts.kind||'Prompt',name:'',status:'draft',date:'Mon 8 Feb 2027',time:'08:00',repeat:opts.kind==='Announcement'?'Does not repeat':'Weekly',recMode:'allGroups',recDistrict:'',recGroups:[],recTrainers:[],headerType:'text',header:norm([]),body:norm([]),footer:'',media:{state:'empty'}};
+  S.ad.ed=e;S.ad.vm=null;S.ad.lastVar=null;S.ad.vq='';S.ad.edErr={};S.screen='tpl';window.scrollTo(0,0);render();
+}
+const toGroups=e=>['allGroups','district','groups'].includes(e.recMode);
+function recGroupList(e){const a=AD();return e.recMode==='allGroups'?a.groups:e.recMode==='district'?a.groups.filter(g=>g.district===e.recDistrict):e.recMode==='groups'?a.groups.filter(g=>e.recGroups.includes(g.id)):[]}
+function recSummary(e){const a=AD();
+  if(e.recMode==='fixed')return {n:a.teachers.filter(t=>t.wa==='invited').length||3,label:e.recFixed};
+  if(toGroups(e)){const gs=recGroupList(e);const n=gs.reduce((s,g)=>s+gMembers(g.id).length,0);return {n,label:`${plural(gs.length,'group')} · ${plural(n,'teacher')}`}}
+  const ts=e.recMode==='allTrainers'?a.trainers:a.trainers.filter(t=>e.recTrainers.includes(t.id));return {n:ts.length,label:plural(ts.length,'trainer')}}
+function recipientsBlock(e){
+  const a=AD();
+  if(e.recMode==='fixed'||(e.kind==='Automatic')){const r=recSummary(e);return `<div><div class="h5" style="margin-bottom:4px">Recipients</div><div>${esc(e.recMode==='fixed'?e.recFixed:e.recMode==='allTrainers'?'All trainers':e.recMode==='allGroups'?'All groups':r.label)} <span class="ann">· ${r.label}</span></div><div class="cap">Nectar decides who gets this automatic message.</div></div>`}
+  const trainerOK=e.kind==='Announcement'||!toGroups(e);
+  const opts=[{v:'allGroups',t:`All groups (${a.groups.length})`},{v:'district',t:'Groups in a district'},{v:'groups',t:'Specific groups'}].concat(trainerOK?[{v:'allTrainers',t:`All trainers (${a.trainers.length})`},{v:'trainers',t:'Specific trainers'}]:[]);
+  let sub='';
+  if(e.recMode==='district') sub=selF('ed-rdist','District',e.recDistrict,[{v:'',t:'Choose a district'},...DISTRICTS.map(d=>({v:d,t:`${d} (${a.groups.filter(g=>g.district===d).length} groups)`}))],'ad.ed.recDistrict');
+  if(e.recMode==='groups'||e.recMode==='trainers'){const isG=e.recMode==='groups';const q=(e.recQ||'').toLowerCase();const chosen=isG?e.recGroups:e.recTrainers;
+    const items=(isG?a.groups:a.trainers).filter(x=>!q||x.name.toLowerCase().includes(q));
+    sub=`<div style="border:1px solid var(--fine);border-radius:4px"><div style="padding:8px;border-bottom:1px solid var(--fine)" class="row"><div class="filter" style="height:36px;flex:1">${I('search','sm')}<input id="ed-rq" placeholder="Search ${isG?'groups':'trainers'}" value="${esc(e.recQ||'')}" data-model="ad.ed.recQ" data-live="1"></div>
+      <span class="cap">${chosen.length} selected</span>${chosen.length?`<button class="btn flat" data-act="recClear">CLEAR</button>`:''}</div>
+      <div style="max-height:220px;overflow-y:auto;padding:4px 0">${items.map(x=>`<label class="chk" style="display:flex;padding:7px 12px"><input type="checkbox" data-change="recPick" data-id="${x.id}" ${chosen.includes(x.id)?'checked':''}><span style="flex:1">${esc(x.name)}</span><span class="cap">${isG?plural(gMembers(x.id).length,'teacher'):x.district}</span></label>`).join('')||'<div class="cap" style="padding:8px 12px">No matches</div>'}</div></div>`}
+  return `<div>${selF('ed-rmode','Recipients',e.recMode,opts,'ad.ed.recMode')}${sub?`<div style="margin-top:12px">${sub}</div>`:''}${S.ad.edErr.rec?`<div class="errtext" style="margin-left:0">${S.ad.edErr.rec}</div>`:''}</div>`;
+}
+function tokField(f,label,max){
+  const e=S.ad.ed;const arr=e[f];const vm=S.ad.vm;
+  const html=arr.map((t,i)=>typeof t==='string'?`<span class="seg" contenteditable="true" data-f="${f}" data-i="${i}">${esc(t)}</span>`
+     :`<button class="vchip" data-act="vchip" data-f="${f}" data-i="${i}"><small>${VARS[t.v].label}</small><b>${esc(tokVal(t))}</b>${I('caret')}</button>`).join('');
+  const nVars=arr.filter(t=>typeof t!=='string').length;const capVars=f==='header'?1:9;
+  let menu='';
+  if(vm&&vm.f===f){
+    if(vm.mode==='insert'||vm.mode==='swap'){const q=(S.ad.vq||'').toLowerCase();const ks=Object.keys(VARS).filter(k=>VARS[k].label.toLowerCase().includes(q));
+      menu=`<div class="vmenu menuwrap" style="left:0;top:calc(100% + 4px)"><div style="padding:6px 10px"><div class="filter" style="height:36px">${I('search','sm')}<input id="vq" placeholder="Search variables" value="${esc(S.ad.vq||'')}" data-model="ad.vq" data-live="1"></div></div>
+        <div class="scroll">${ks.map(k=>`<button data-act="pickVar" data-k="${k}"><span>${VARS[k].label}</span><span class="cap">${esc(VARS[k].sample())}</span></button>`).join('')||'<div class="cap" style="padding:8px 14px">No variables match</div>'}</div></div>`}
+    else if(vm.mode==='chip'){const t=arr[vm.i];const opts=VARS[t.v].opts?VARS[t.v].opts():[VARS[t.v].sample()];const cur=tokVal(t);
+      menu=`<div class="vmenu menuwrap" style="left:0;top:calc(100% + 4px)"><div style="padding:6px 14px 4px"><div class="cap" style="color:#000">Sample value</div><div class="cap">Needed for review by Meta</div></div>
+        <div class="scroll">${opts.map(o=>`<button class="${o===cur?'on':''}" data-act="pickSample" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div><hr style="border:0;border-top:1px solid var(--fine);margin:4px 0">
+        <button data-act="swapVar">Choose different variable</button><button data-act="rmVar">Remove</button></div>`}
+  }
+  const len=tokText(arr).length;
+  return `<div style="position:relative"><div class="tokfield" data-act="focusTok" data-f="${f}"><label>${label}</label>${html}</div>${menu}
+    <div class="counter"><span class="row" style="gap:12px"><button class="btn flat" style="padding:0 4px;font-size:13px" data-act="insertVar" data-f="${f}" ${nVars>=capVars?'disabled':''}>${I('add','sm')}INSERT VARIABLE</button>
+      ${f==='header'?`<span>${nVars} of 1 variable used in the header</span>`:S.ad.lastVar&&S.ad.lastVar.f===f?`<span>${esc(S.ad.lastVar.label)} added. Its sample value is used for Meta review.</span>`:''}</span>
+      <span id="cnt-${f}" class="${len>max?'badtext':''}">${len} / ${max}</span></div>${S.ad.edErr[f]?`<div class="errtext" style="margin-left:0">${S.ad.edErr[f]}</div>`:''}</div>`;
+}
+function previewHtml(){
+  const e=S.ad.ed;const head=e.headerType==='text'?tokText(e.header):'';
+  const media=e.headerType==='media'&&e.media.state==='done'?`<div class="row" style="gap:10px;background:#f2f2f2;border-radius:4px;padding:8px;margin-bottom:8px"><span class="pdf" style="${e.media.kind==='PDF'?'':'background:#5c8ee6'}">${e.media.kind||'IMG'}</span><div><div style="font-weight:600">${esc(e.media.file)}</div><div class="cap">${esc(e.media.meta||'')}</div></div></div>`:'';
+  const warn=e.body.concat(e.header).some(t=>t&&t.v==='trainer')&&AD().groups.some(g=>!g.trainer)&&recGroupList(e).some(g=>!g.trainer)
+    ?`<div class="note" style="margin-top:12px;color:#000">${I('warn','sm')}<span>${plural(recGroupList(e).filter(g=>!g.trainer).length,'group')} ${recGroupList(e).filter(g=>!g.trainer).length===1?'has':'have'} no trainer yet, so Trainer name would be empty. Choose a trainer or remove the variable.</span></div>`:'';
+  return `<div class="preview"><div class="bubble">${media}${head?`<div style="font-weight:600;margin-bottom:6px">${esc(head)}</div>`:''}${esc(tokText(e.body))||'<span class="ann">Message preview</span>'}${e.footer?`<div class="cap" style="margin-top:8px">${esc(e.footer)}</div>`:''}</div></div>${warn}`;
+}
+function updateEdLive(){const p=document.getElementById('tplpreview');if(p)p.innerHTML=previewHtml();
+  for(const [f,max] of [['header',60],['body',1024]]){const c=document.getElementById('cnt-'+f);if(c){const l=tokText(S.ad.ed[f]).length;c.textContent=l+' / '+max;c.className=l>max?'badtext':''}}}
+function scrTpl(){
+  const e=S.ad.ed;const auto=e.kind==='Automatic';
+  const statusBadge=e.isNew?'':chip(e.status);
+  const sub=auto?`Automatic · Sent by Nectar · Utility`:`${e.kind} · Utility`;
+  const TYPE_DESC={Prompt:'Prompts ask teachers a reflection question, and can repeat on a schedule.',Announcement:'Announcements send once.'};
+  const typeBlock=e.isNew?''
+    :`<div><div class="h5">Type</div><div style="margin-top:4px">${auto?(e.trigger?'Automatic (sent when something happens)':'Automatic (Nectar writes it each time)'):e.kind}</div></div>`;
+  const nameField=(e.isNew||e.kind==='Announcement')?field('ed-name','Template name',e.name,{model:'ad.ed.name',err:S.ad.edErr.name,help:'Visible to admins only'}):'';
+  const timeOpts=['07:00','08:00','09:00','10:00','12:00','16:00','17:00','18:00'].map(v=>({v,t:v+' EAT'}));
+  const when=e.trigger?`<div><div class="h5" style="margin-bottom:8px">When it’s sent</div><div style="max-width:300px">${e.triggerLabel?selF('ed-trig',e.triggerLabel,e.triggerVal,['1 week','2 weeks','3 weeks','4 weeks'],'ad.ed.triggerVal'):`<div class="ann">${esc(AD().templates.find(t=>t.id===e.id)?.freq||'')}</div>`}</div>
+      <div class="cap" style="margin-top:6px">Changing when it’s sent doesn’t need Meta review. Teacher names are never included.</div></div>`
+    :auto?`<div><div class="h5" style="margin-bottom:8px">When</div><div class="grid3" style="max-width:600px">${selF('ed-day','Day',e.day,['Monday','Tuesday','Wednesday','Thursday','Friday'],'ad.ed.day')}${selF('ed-time','Time',e.time,timeOpts,'ad.ed.time')}${selF('ed-rep','Repeat',e.repeat,['Weekly','Every 2 weeks'],'ad.ed.repeat')}</div></div>`
+    :`<div><div class="h5" style="margin-bottom:8px">When</div><div class="grid3" style="max-width:600px">${selF('ed-date','Date',e.date,['Mon 1 Feb 2027','Mon 8 Feb 2027','Mon 15 Feb 2027','Mon 22 Feb 2027','Mon 25 Jan 2027','Fri 22 Jan 2027'].filter((v,i,a)=>a.indexOf(v)===i).concat(e.date&&!['Mon 1 Feb 2027','Mon 8 Feb 2027','Mon 15 Feb 2027','Mon 22 Feb 2027','Mon 25 Jan 2027','Fri 22 Jan 2027'].includes(e.date)?[e.date]:[]),'ad.ed.date')}
+        ${selF('ed-time','Time',e.time,timeOpts,'ad.ed.time')}${e.kind==='Announcement'?'':selF('ed-rep','Repeat',e.repeat,['Does not repeat','Weekly','Every 2 weeks'],'ad.ed.repeat')}</div></div>`;
+  const rs=recSummary(e);const n=rs.n;
+  const m=e.media;
+  const mediaBox=m.state==='done'?`<div class="mediabox"><div class="cap" style="margin-bottom:6px">Header ${m.kind==='PDF'?'document':'image'}</div><div class="row"><span class="pdf" style="${m.kind==='PDF'?'':'background:#5c8ee6'}">${m.kind||'IMG'}</span><div style="flex:1"><div style="font-weight:600">${esc(m.file)}</div><div class="cap">${esc(m.meta)}</div></div>
+        <button class="btn flat" style="color:#000" data-act="notInProto">VIEW SAMPLE</button><button class="btn flat" style="color:#000" data-act="mediaPick">REPLACE</button>${m.kind==='PDF'?'':'<button class="btn flat danger" data-act="mediaRm">REMOVE</button>'}</div>
+        ${e.id==='digest'?'<div class="cap" style="margin-top:10px;text-transform:uppercase">Sent each week</div><div>A new digest for each trainer, generated by Nectar on Thursday · File name: Digest – {Trainer name} – {Week dates}.pdf</div>':''}</div>
+      <div class="help" style="margin-left:0">${m.kind==='PDF'?'PDF up to 100 MB. Meta only reviews the sample. The weekly files are attached when sending and don’t need review.':'Image (JPG or PNG) up to 5 MB.'}</div>`
+    :m.state==='loading'?`<div class="mediabox"><div class="loading" style="padding:8px">${'<div class="spinner"></div>'}<span>Uploading ${esc(m.file)}…</span></div></div>`
+    :`<div class="drop" style="padding:24px">${I('upload')}<div>Drag an image, video or PDF here, or</div><button class="btn secondary" data-act="mediaPick">CHOOSE FILE</button>
+        <div class="cap">Image up to 5 MB · Video up to 16 MB · PDF up to 100 MB</div><button class="link cap" data-act="mediaBig">Prototype: try a file that’s too large</button></div>
+      ${m.state==='big'?`<div class="errtext" style="margin-left:0">trainer-visit-video.mp4 is 48 MB. Videos can be up to 16 MB. Try a shorter clip.</div>`:''}`;
+  const left=e.isNew?'Draft · not yet submitted to Meta':e.status==='approved'?'Approved · 8 of 10 edits left in the next 30 days. Text changes are reviewed by Meta again.':e.status==='pending'?'In review with Meta · usually within 24 hours':e.status==='rejected'?'Rejected by Meta · fix the problem and resubmit':e.status==='paused'?'Paused · nothing sends until you resume it':'Draft';
+  const inner=`<div class="apage" style="max-width:1300px">
+    <div class="row" style="gap:12px"><h1 class="h3" style="font-size:24px">${e.isNew?'New '+e.kind.toLowerCase():esc(e.name)}</h1>${statusBadge}</div>
+    ${e.isNew?'':`<div class="cap">${sub}</div>`}
+    ${e.status==='rejected'?`<div class="alert error" style="margin-top:16px">${I('err')}<div>Rejection reason: ${esc(e.reason||'')}</div></div>`:''}
+    ${e.sent?`<div class="alert info" style="margin-top:16px">${I('info')}<div>This week’s message has already been sent. Changes apply to future sends.</div></div>`:''}
+    <div class="tplgrid" style="margin-top:20px"><div class="stack">
+      ${typeBlock}${nameField}${when}
+      ${recipientsBlock(e)}
+      <div class="row" style="gap:6px"><b>Estimated cost per send: ≈ $X.XX</b><span class="tip tipw ann" tabindex="0" aria-label="How this is estimated" data-tip="${n} recipients${toGroups(e)?` in ${plural(recGroupList(e).length,'group')}`:''} × Utility rate (Rest of Africa). Final cost depends on delivery." style="display:inline-flex;cursor:help">${I('info','sm')}</span></div>
+      <div class="radios"><span class="h5">Header</span>
+        <label class="chk"><input type="radio" name="htype" value="text" data-change="edHead" ${e.headerType==='text'?'checked':''}> Text</label>
+        <label class="chk"><input type="radio" name="htype" value="media" data-change="edHead" ${e.headerType==='media'?'checked':''}> Image, video or document</label></div>
+      ${e.headerType==='text'?tokField('header','Header (optional)',60):mediaBox}
+      ${tokField('body','Body (required)',1024)}
+      <div>${field('ed-footer','Footer (optional)',e.footer,{model:'ad.ed.footer'})}<div class="counter"><span>Variables can’t be used in the footer.</span><span>${e.footer.length} / 60</span></div></div>
+    </div>
+    <div style="position:sticky;top:80px"><div class="h5" style="margin-bottom:8px">Preview</div><div id="tplpreview">${previewHtml()}</div></div></div></div>`;
+  return ashell('schedule',inner)+`<div class="bottombar"><span class="ann">${left}</span><span class="spacer"></span>
+     <button class="btn flat" style="color:#000" data-act="edCancel">CANCEL</button><button class="btn flat" style="color:#000" data-act="edDraft">SAVE AS DRAFT</button>
+     <button class="btn primary" data-act="edSubmit">${e.status==='rejected'?'RESUBMIT FOR REVIEW':'SUBMIT FOR REVIEW'}</button></div><div style="height:72px"></div>`;
+}
+
+/* ---------------- groups ---------------- */
+function scrGroups(){
+  const a=AD();const q=(a.q.g||'').toLowerCase();const fd=a.f.gd||'',ft=a.f.gt||'',fa=a.f.ga||'';
+  let list=a.groups.filter(g=>(!q||g.name.toLowerCase().includes(q))&&(!fd||g.district===fd)&&(!ft||(ft==='none'?!g.trainer:g.trainer===ft))
+    &&(!fa||(fa==='quiet'?(g.last||0)>=20160:(g.last||1e9)<10080)));
+  list=sortBy('g',list,{name:g=>g.name,district:g=>g.district,trainer:g=>trn(g.trainer)?.name||'',teachers:g=>gMembers(g.id).length,last:g=>L()?g.last:null});
+  const noTr=a.groups.filter(g=>!g.trainer).length;
+  const rows=list.map((g,i)=>{const m=gMembers(g.id);const j=m.filter(t=>waOf(t)==='joined').length,inv=m.filter(t=>waOf(t)==='invited').length,ni=m.filter(t=>waOf(t)==='notinv').length;const t=trn(g.trainer);
+    return `<tr><td><button class="gl" data-act="openGroup" data-id="${g.id}">${esc(g.name)}</button></td><td>${esc(g.district)}</td>
+      <td>${t?esc(t.name):`<div class="row" style="gap:4px"><span class="warnicon">${I('warn','sm')}</span>None</div><button class="gl" data-act="askTrainer" data-id="${g.id}">Add trainer</button>`}</td>
+      <td>${m.length} of ${MAX}</td><td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">${j?chip('joined',j+' joined'):''}${inv?chip('invited',inv+' invited'):''}${ni?chip('notinv',ni+' not invited'):''}</div></td>
+      <td>${relCell(L()?g.last:null)}</td>
+      <td style="text-align:right">${more('g-'+g.id,mi('View members','openGroup',`data-id="${g.id}" data-t="members"`)+mi('Rename group','askRename',`data-id="${g.id}"`)+mi(t?'Change trainer':'Add trainer','askTrainer',`data-id="${g.id}"`)+mi('Add teachers','editGroups')+mi(m.length>=MAX?'Copy group invite link (group full)':'Copy group invite link','copyLink','',{dis:!L()||m.length>=MAX})+'<hr>'+mi('Delete group','askDelGroup',`data-id="${g.id}"`,{danger:true}),i>list.length-4)}</td></tr>`}).join('');
+  return ashell('groups',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Groups</h1><button class="btn secondary" data-act="editGroups">EDIT GROUPS</button><button class="btn primary" data-act="askNewGroup">NEW GROUP</button></div>
+    <div class="toolbar" style="margin-top:16px"><div class="filter">${I('search','sm')}<input id="q-g" placeholder="Search groups" value="${esc(a.q.g||'')}" data-model="ad.q.g" data-live="1"></div>
+      ${selF('f-gd','District',fd,[{v:'',t:'All'},...DISTRICTS],'ad.f.gd')}${selF('f-gt','Trainer',ft,[{v:'',t:'All'},{v:'none',t:'No trainer'},...a.trainers.map(t=>({v:t.id,t:t.name}))],'ad.f.gt')}${selF('f-ga','Activity',fa,[{v:'',t:'All'},{v:'active',t:'Active this week'},{v:'quiet',t:'Quiet for 2+ weeks'}],'ad.f.ga')}</div>
+    ${noTr&&a.bannerG?`<div class="alert warning" style="margin-bottom:12px;align-items:center">${I('warn')}<div style="flex:1">${plural(noTr,'group')} ${noTr===1?'has':'have'} no trainer</div><button class="iconbtn" data-act="closeBanner" data-b="bannerG">${I('close','sm')}</button></div>`:''}
+    <table class="atable"><colgroup><col><col style="width:110px"><col style="width:170px"><col style="width:100px"><col style="width:160px"><col style="width:150px"><col style="width:56px"></colgroup>
+    <thead><tr><th>${sortH('g','name','Group')}</th><th>${sortH('g','district','District')}</th><th>${sortH('g','trainer','Trainer')}</th><th>${sortH('g','teachers','Teachers')}</th><th>WhatsApp</th><th>${sortH('g','last','Last activity')}</th><th></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="7" class="ann" style="text-align:center;padding:32px">No groups match</td></tr>'}</tbody></table>
+    <div class="cap" style="text-align:right;margin-top:12px">Showing ${list.length} of ${a.groups.length} groups</div></div>`);
+}
+function convMessages(g){
+  const m=gMembers(g.id).map(t=>t.name);const p=i=>m[i%Math.max(1,m.length)]||'A teacher';
+  return [{sep:'Mon 18 Jan'},
+   {bot:1,time:'08:00',tag:'Weekly prompt · template',text:`Hi ${g.name}! This week’s question: think of a moment this week when a learner surprised you. What did they do, and what did you do next? Share a bright spot here, or reply REFLECT to think it through privately.`,meta:`Delivered to ${m.length} · Read by ${m.length}`},
+   {who:p(0),time:'09:14',text:'In my S2 practical today, a quiet student explained osmosis using a cup of tea and sugar. The whole class got it after that!'},
+   {who:p(1),time:'09:30',text:`That’s lovely ${p(0).split(' ')[0]}. I might borrow the tea idea for my S1s.`},
+   {who:p(2),time:'12:02',img:1,text:'Our bean germination results, day 5. The learners recorded everything themselves this time.'},
+   {sep:'Wed 20 Jan'},
+   {bot:1,time:'16:00',tag:'Across the circles · template',text:'Across the circles this week: groups shared ways to use everyday objects in practicals, and tips for keeping large classes on task. Themes only, no names.',meta:`Delivered to ${m.length} · Read by ${Math.max(0,m.length-2)}`},
+   {sep:'Today'},
+   {who:p(3),time:'14:20',text:'Has anyone tried peer marking with large classes? I have 84 in S2.'},
+   {who:p(0),time:'14:32',text:'Yes, I give each row a short checklist and they swap books. It saves me a lot of marking time.'}];
+}
+function scrGroup(){
+  const a=AD();const g=grp(a.group);if(!g){a.tab='groups';return scrGroups()}
+  const tab=a.gtab;const t=trn(g.trainer);const m=gMembers(g.id);
+  let body='';
+  if(tab==='conv'){
+    const q=(a.q.conv||'').toLowerCase();
+    const msgs=convMessages(g).filter(x=>x.sep||!q||(x.text+(x.who||'')).toLowerCase().includes(q));
+    const msgHtml=!L()?`<div class="empty" style="padding:48px 0">${I('groups')}<div class="h5">No messages yet</div><div class="ann">The group chat starts when you launch the program and teachers join.</div></div>`
+      :msgs.map(x=>x.sep?`<div class="daysep">${x.sep}</div>`:x.bot?`<div class="msg"><span class="avatar" style="background:#ffd533;color:#000">N</span><div class="botmsg"><div class="row" style="gap:8px"><b>Nectar</b>${BOT}<span class="cap">${x.time}</span><span class="cap" style="background:#eee;border-radius:3px;padding:0 6px">${x.tag}</span></div><div style="margin-top:4px">${esc(x.text)}</div><div class="cap" style="margin-top:4px">${x.meta}</div></div></div>`
+        :`<div class="msg">${avatar(x.who)}<div><div class="row" style="gap:8px"><b>${esc(x.who)}</b><span class="cap">${x.time}</span></div>${x.img?'<div style="width:180px;height:116px;border-radius:4px;background:linear-gradient(135deg,#cfe3c2,#8fbf7f);margin:6px 0"></div>':''}<div>${esc(x.text)}</div></div></div>`).join('');
+    const posted=m.filter(x=>lastOf(x)!=null&&lastOf(x)<10080);const notPosted=m.filter(x=>!posted.includes(x)).map(x=>x.name.split(' ')[0]);
+    const side=`<div class="sidepanel"><div class="h5">This week</div>
+      <div class="stat" style="margin-top:12px"><div class="cap">Messages from teachers</div><div style="font-weight:600">${L()?6:0}</div></div>
+      <div class="stat"><div class="cap">Teachers who posted</div><div style="font-weight:600">${posted.length} of ${m.length}</div>${notPosted.length&&L()?`<div class="cap">${esc(andList(notPosted.slice(0,3)))}${notPosted.length>3?' and others':''} haven’t posted yet</div>`:''}</div>
+      <div class="stat"><div class="cap">Last activity</div><div style="font-weight:600">${L()?rel(g.last):'—'}</div></div>
+      <hr style="border:0;border-top:1px solid var(--fine);margin:16px 0">
+      <div class="h5">Next from Nectar</div><div class="cap" style="margin-top:10px">Weekly prompt</div><div style="font-weight:600">Monday 25 Jan · 08:00 EAT</div><div class="cap">Prompt · Kenneth Oroma</div>
+      <div style="margin:6px 0 10px">${chip('approved')}</div>
+      <div class="botmsg" style="font-size:14px">Hi ${esc(g.name)}! This week’s question: what is one thing you tried this week because of something a colleague shared? Share it here, or reply REFLECT to think it through privately.</div>
+      <button class="btn flat" style="margin-top:8px;padding:0 4px" data-act="openTpl" data-id="weekly">EDIT MESSAGE</button></div>`;
+    body=`<div class="convwrap"><div><div class="filter" style="margin-bottom:12px">${I('search','sm')}<input id="q-conv" placeholder="Search this conversation" value="${esc(a.q.conv||'')}" data-model="ad.q.conv" data-live="1"></div>
+      <div class="cap" style="background:var(--blue50);padding:8px 12px;border-radius:4px;margin-bottom:8px">Members agreed when joining that program staff can read this group. Only admins and the group’s trainer can see this page.</div>${msgHtml}</div>${side}</div>`;
+  } else if(tab==='members'){
+    const rows=m.map((p,i)=>`<tr><td><div style="font-weight:600">${esc(p.name)}</div><div class="cap">${esc(p.phone)}</div></td><td>${esc(p.school||'—')}</td><td>${esc(p.subjects||'—')}</td><td>${chip(waOf(p))}</td><td>${lastOf(p)==null?`<span class="ann">${L()&&waOf(p)==='joined'?'No posts yet':'—'}</span>`:relCell(lastOf(p))}</td>
+      <td style="text-align:right">${more('m-'+p.id,mi('Edit details','askUser',`data-id="${p.id}"`)+mi('Move to another group','askAddGrp',`data-id="${p.id}"`)+'<hr>'+mi('Remove from group','rmFromGroup',`data-id="${p.id}"`,{danger:true}),i>m.length-3)}</td></tr>`).join('');
+    body=`<div class="trainercard"><div style="flex:1"><div class="cap" style="text-transform:uppercase">Trainer</div>${t?`<div style="font-weight:600">${esc(t.name)}</div><div class="cap">${esc(t.phone)} · Not in the group chat. Gets this group’s digest and alerts.</div>`:`<div class="row" style="gap:4px"><span class="warnicon">${I('warn','sm')}</span>No trainer yet</div>`}</div>
+      <button class="btn flat" style="color:#000" data-act="askTrainer" data-id="${g.id}">${t?'CHANGE TRAINER':'ADD TRAINER'}</button></div>
+      <table class="atable"><thead><tr><th>Name</th><th>School</th><th>Subjects</th><th>WhatsApp</th><th>Last posted</th><th style="width:56px"></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="ann" style="padding:24px;text-align:center">No teachers in this group yet</td></tr>'}</tbody></table>`;
+  } else {
+    body=`${weekNav()}<p class="cap" style="margin:-4px 0 12px">Showing messages this group receives, and messages sent to its trainer about it.</p>${weekTable(a.week,{sentTo:true})}`;
+  }
+  const hm=a.menu==='ghead'?`<div class="amenu">${mi('Rename group','askRename',`data-id="${g.id}"`)}${mi(t?'Change trainer':'Add trainer','askTrainer',`data-id="${g.id}"`)}<hr>${mi('Delete group','askDelGroup',`data-id="${g.id}"`,{danger:true})}</div>`:'';
+  return ashell('groups',`<div class="apage"><button class="gl" style="margin-bottom:12px" data-act="atab" data-tab="groups">‹ Groups</button>
+    <div class="ahead"><h1 class="h3" style="font-size:24px">${esc(g.name)}</h1>${(()=>{const full=m.length>=MAX;const tip=full?'Group full':!L()?'Invite links are created when you launch the program':'';
+      return `<span class="tip" ${tip?`data-tip="${tip}"`:''}><button class="btn secondary" data-act="copyLink" ${tip?'disabled':''}>COPY INVITE LINK</button></span>`})()}
+      <span class="menuwrap"><button class="morebtn" data-act="amenu" data-id="ghead">${I('more','sm')}</button>${hm}</span></div>
+    <div class="subtabs">${[['conv','Conversation'],['members','Members'],['sched','Schedule']].map(([k,l])=>`<button class="subtab ${tab===k?'on':''}" data-act="gtab" data-t="${k}">${l}</button>`).join('')}</div>${body}</div>`);
+}
+
+/* ---------------- users ---------------- */
+function scrUsers(){
+  const a=AD();const q=(a.q.u||'').toLowerCase();const fr=a.f.ur||'',fd=a.f.ud||'',fg=a.f.ug||'';
+  const all=[...a.trainers,...a.teachers];
+  let list=all.filter(p=>(!q||(p.name+' '+p.phone).toLowerCase().includes(q))&&(!fr||p.role===fr)&&(!fd||p.district===fd)&&(!fg||(fg==='none'?p.role==='teacher'&&!p.group:p.group===fg)));
+  list=sortBy('u',list,{name:p=>p.name,role:p=>p.role,district:p=>p.district,group:p=>p.role==='trainer'?'':(grp(p.group)?.name||'~'),wa:p=>waOf(p),last:p=>lastOf(p)});
+  if(!a.sort.u) list=[...list].sort((x,y)=>x.name.localeCompare(y.name));
+  const shown=list.slice(0,a.shown);const ung=a.teachers.filter(t=>!t.group).length;const sel=a.sel;
+  const selTeachers=[...sel].every(id=>a.teachers.some(t=>t.id===id));
+  const rows=shown.map((p,i)=>{const isT=p.role==='trainer';const ng=a.groups.filter(g=>g.trainer===p.id).length;
+    const items=isT?mi('Edit details','askUser',`data-id="${p.id}"`)+mi('View groups','viewTrainerGroups',`data-id="${p.id}"`)+'<hr>'+mi('Remove user','rmUser',`data-id="${p.id}"`,{danger:true})
+      :mi('Edit details','askUser',`data-id="${p.id}"`)+mi(p.group?'Move to another group':'Add to a group','askAddGrp',`data-id="${p.id}"`)+mi('Resend WhatsApp invite','resend',`data-id="${p.id}"`,{dis:!(L()&&p.group&&waOf(p)==='invited')})+'<hr>'+mi('Remove user','rmUser',`data-id="${p.id}"`,{danger:true});
+    return `<tr class="${sel.has(p.id)?'sel':''}"><td style="width:40px"><input type="checkbox" data-change="uSel" data-id="${p.id}" ${sel.has(p.id)?'checked':''} aria-label="Select ${esc(p.name)}"></td>
+    <td><div style="font-weight:600">${esc(p.name)}</div><div class="cap">${esc(p.phone)}</div></td><td>${isT?'Trainer':'Teacher'}</td><td>${esc(p.district)}</td><td><span class="trunc" style="max-width:170px">${esc(p.school||'—')}</span></td><td><span class="trunc" style="max-width:120px">${esc(p.subjects||'—')}</span></td>
+    <td>${isT?plural(ng,'group'):p.group?esc(grp(p.group).name):`<span class="row" style="gap:4px;font-size:12px;font-weight:600;color:#8a6100"><span class="warnicon">${I('warn','sm')}</span>Not in a group</span>`}</td>
+    <td>${chip(isT?(L()?'joined':'notinv'):waOf(p))}</td><td>${isT?'<span class="ann">—</span>':lastOf(p)==null?`<span class="ann">${waOf(p)==='joined'?'No posts yet':'—'}</span>`:relCell(lastOf(p))}</td>
+    <td style="text-align:right">${more('u-'+p.id,items,i>shown.length-4&&i>3)}</td></tr>`}).join('');
+  const allVis=shown.length&&shown.every(p=>sel.has(p.id));
+  const topBar=sel.size?`<div class="sel-bar"><b>${sel.size} selected</b><span class="spacer"></span>${selTeachers?'':'<span class="cap">Only teachers can be added to groups</span>'}<button class="btn flat" data-act="uClear">CLEAR</button><button class="btn secondary" data-act="askAddGrpSel" ${selTeachers?'':'disabled'}>ADD TO GROUP</button></div>`
+    :ung&&a.bannerU?`<div class="alert warning" style="margin-bottom:12px;align-items:center">${I('warn')}<div style="flex:1">${plural(ung,'teacher')} ${ung===1?'isn’t':'aren’t'} in a group yet. <button class="gl" data-act="filterUngrouped">Show them</button></div><button class="iconbtn" data-act="closeBanner" data-b="bannerU">${I('close','sm')}</button></div>`:'';
+  return ashell('users',`<div class="apage" style="max-width:1300px"><div class="ahead"><h1 class="h3" style="font-size:24px">Users</h1><button class="btn secondary" data-act="startUpload">UPLOAD CSV</button><button class="btn primary" data-act="askUser">ADD USER</button></div>
+    <div class="toolbar" style="margin-top:16px"><div class="filter">${I('search','sm')}<input id="q-u" placeholder="Search by name or phone" value="${esc(a.q.u||'')}" data-model="ad.q.u" data-live="1"></div>
+     ${selF('f-ur','Role',fr,[{v:'',t:'All'},{v:'teacher',t:'Teacher'},{v:'trainer',t:'Trainer'}],'ad.f.ur')}${selF('f-ud','District',fd,[{v:'',t:'All'},...DISTRICTS],'ad.f.ud')}${selF('f-ug','Group',fg,[{v:'',t:'All'},{v:'none',t:'Not in a group'},...a.groups.map(g=>({v:g.id,t:g.name}))],'ad.f.ug')}</div>
+    ${topBar}
+    <table class="atable"><thead><tr><th><input type="checkbox" data-change="uSelAll" ${allVis?'checked':''} aria-label="Select all shown"></th><th>${sortH('u','name','Name')}</th><th>${sortH('u','role','Role')}</th><th>${sortH('u','district','District')}</th><th>School</th><th>Subjects</th><th>${sortH('u','group','Group')}</th><th>${sortH('u','wa','WhatsApp')}</th><th>${sortH('u','last','Last posted')}</th><th></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="10" class="ann" style="text-align:center;padding:32px">No one matches</td></tr>'}</tbody></table>
+    <div class="row" style="justify-content:flex-end;margin-top:12px"><span class="cap">Showing ${shown.length} of ${list.length} people</span>${list.length>shown.length?'<button class="btn flat" data-act="showMore">SHOW MORE</button>':''}</div></div>`);
+}
+
+/* ---------------- upload users (full screen) ---------------- */
+function startUpload(){S.ad.up={state:'empty'};S.screen='upload';window.scrollTo(0,0);render()}
+function buildUploadReview(){const a=AD();const ex=a.teachers.filter(t=>t.group).slice(0,3);
+  const mk=(name,phone,district,school,subjects,role='teacher')=>({uid:nid('u'),name,phone,district,school,subjects,role});
+  return {state:'review',file:'busia_new_teachers.csv',
+    fix:[{...mk('Moses Wanyama','','Busia','Nkoma Secondary School','Physics'),err:{phone:'Phone number missing'}},{...mk('Esther Nabwire','+256 772 ••• 191','Busiaa','Busia Secondary School','Maths'),err:{district:'Not recognised'}}],
+    add:[mk('Rose Achieng','+256 772 ••• 207','Busia','Busia Secondary School','','trainer'),
+      ...[['Moureen Nafula','Nkoma Secondary School','Biology'],['Joseph Ekesa','Kamuge High School','Chemistry'],['Sarah Atieno','Busia Secondary School','Maths'],['Paul Barasa','Nkoma Secondary School','Physics'],['Agnes Nekesa','Kamuge High School','Biology, Chemistry'],['Tom Wandera','Busia Secondary School','Maths'],['Lucy Adhiambo','Nkoma Secondary School','Biology'],['Ivan Mugeni','Kamuge High School','Physics'],['Olive Nasimiyu','Busia Secondary School','Chemistry'],['Henry Ouma','Nkoma Secondary School','Maths'],['Faith Akinyi','Kamuge High School','Biology']].map(([n,s,sub],i)=>mk(n,'+256 772 ••• '+(180+i),'Busia',s,sub))],
+    upd:ex.map((t,i)=>({id:t.id,name:t.name,phone:t.phone,district:t.district,school:t.school,subjects:t.subjects,change:i===1?{field:'phone',was:t.phone,now:t.phone.replace(/\d+$/,'225')}:{field:'school',was:t.school,now:SCH[t.district].find(x=>x!==t.school)||t.school}})),
+    unchanged:a.teachers.length-3};
+}
+function scrUpload(){
+  const u=S.ad.up;
+  if(u.state!=='review'){
+    const inner=u.state==='loading'?`<div class="loading"><div class="spinner"></div><span>Checking busia_new_teachers.csv…</span></div>`
+     :`<div class="drop" style="padding:40px">${I('upload')}<button class="btn primary" data-act="doUpload">UPLOAD A FILE</button><div class="cap">Excel (.xlsx) or CSV</div></div>
+      <div><h2 class="h4">Get the template</h2><div class="row" style="margin:12px 0"><button class="btn secondary" data-act="tpl">${I('download','sm')}DOWNLOAD EXCEL TEMPLATE</button><button class="btn secondary" data-act="tpl">MAKE A COPY IN GOOGLE SHEETS</button></div><p class="ann">The template flags problems as you type.</p></div>
+      <div><h3 class="h5" style="margin-bottom:8px">One row per person</h3><table><thead><tr><th>Column</th><th>Required</th><th>Example</th><th>Notes</th></tr></thead><tbody>
+       <tr><td>Name</td><td>Yes</td><td>Grace Akello</td><td>Full name</td></tr><tr><td>Phone</td><td>Yes</td><td>+256 7XX XXX 101</td><td>Include the country code. Use a mobile number with WhatsApp.</td></tr>
+       <tr><td>District</td><td>Yes</td><td>Tororo</td><td>Choose from the list</td></tr><tr><td>School</td><td>No</td><td>Rock High School</td><td>Where they teach</td></tr>
+       <tr><td>Subjects</td><td>No</td><td>Biology, Chemistry</td><td>Separate subjects with commas</td></tr><tr><td>Trainer?</td><td>No</td><td>✓</td><td>Tick only for trainers. Leave blank for teachers.</td></tr></tbody></table></div>`;
+    return fullShell('Upload users',`<div class="page narrow stack"><div><h1 class="h3">Upload users</h1><p class="ann">Add or update trainers and teachers from a spreadsheet. People already in the program are matched by phone number. You’ll review everything before it’s added.</p></div>${inner}</div>`,
+      {buttons:`<button class="btn primary" disabled>ADD USERS</button>`});
+  }
+  const head='<colgroup><col style="width:28%"><col style="width:16%"><col style="width:30%"><col><col style="width:48px"></colgroup><thead><tr><th>Name</th><th>District</th><th>School</th><th>Subjects</th><th></th></tr></thead>';
+  const row=(p,ctx)=>`<tr class="${ctx==='fix'?'uprow-fix':''}"><td><div>${esc(p.name)}</div><div class="cap ${p.err?.phone?'badtext':''}" style="${p.err?.phone?'color:var(--error);font-weight:600':''}">${esc(p.err?.phone||p.phone)}</div></td>
+     <td>${p.err?.district?`<span class="badtext">${esc(p.district)}</span><div class="cap" style="color:var(--error)">${p.err.district}</div>`:esc(p.district)}</td><td>${esc(p.school||'—')}</td><td>${esc(p.subjects||'—')}</td>
+     <td><button class="iconbtn" title="Edit ${esc(p.name)}" data-act="editUpRow" data-uid="${p.uid}" data-ctx="${ctx}">${I('edit','sm')}</button></td></tr>`;
+  const tr=u.add.filter(p=>p.role==='trainer'),te=u.add.filter(p=>p.role==='teacher');
+  const updRows=u.upd.map(p=>`<tr><td><div>${esc(p.name)}</div><div class="cap">${p.change.field==='phone'?`<b style="color:#000">${esc(p.change.now)}</b><br>Was ${esc(p.change.was)}`:esc(p.phone)}</div></td><td>${esc(p.district)}</td>
+     <td>${p.change.field==='school'?`<b>${esc(p.change.now)}</b><div class="cap">Was ${esc(p.change.was)}</div>`:esc(p.school)}</td><td>${esc(p.subjects)}</td><td></td></tr>`).join('');
+  const nAdd=u.add.length+u.upd.length;
+  return fullShell('Upload users',`<div class="page narrow stack"><div><h1 class="h3">Upload users</h1><p class="ann">Check what we found in your file. Edit anyone whose details need fixing before adding them to the program.</p></div>
+    <div class="filechip" style="border:1px solid var(--fine);border-radius:4px">${I('doc')}<div style="flex:1"><div>${u.file}</div><div class="cap">${u.add.length} new people, ${u.upd.length} updates, ${u.unchanged} unchanged${u.fix.length?`, ${u.fix.length} need fixing`:''}</div></div><button class="btn flat" data-act="doUpload">REPLACE FILE</button></div>
+    ${u.fix.length?`<div class="alert warning">${I('warn')}<div>${plural(u.fix.length,'row')} ${u.fix.length===1?'needs':'need'} fixing. Edit ${u.fix.length===1?'it':'them'} below, or ${u.fix.length===1?'it':'they'} won’t be added.</div></div>
+      <div><h2 class="h5" style="margin-bottom:8px">Needs fixing (${u.fix.length})</h2><table>${head}<tbody>${u.fix.map(p=>row(p,'fix')).join('')}</tbody></table></div>`:`<div class="alert success">${I('ok')}<div>Everything in the file is ready to add.</div></div>`}
+    <div><h2 class="h5" style="margin-bottom:8px">New trainers (${tr.length})</h2><table>${head}<tbody>${tr.map(p=>row(p,'add')).join('')||'<tr><td colspan="5" class="ann">None</td></tr>'}</tbody></table></div>
+    <div><h2 class="h5" style="margin-bottom:8px">New teachers (${te.length})</h2><table>${head}<tbody>${te.map(p=>row(p,'add')).join('')}</tbody></table></div>
+    <div><h2 class="h5" style="margin-bottom:8px">Updates (${u.upd.length})</h2><table>${head}<tbody>${updRows}</tbody></table></div>
+    <div class="note">${I('info','sm')}<span>${u.unchanged} teachers in your file already match the current list, so nothing changes for them.</span></div>
+    <div class="note">${I('info','sm')}<span>New teachers start as “Not in a group”. They get a WhatsApp invite once they’re in a group${L()?'':' and the program is launched'}.</span></div></div>`,
+   {left:`${u.add.length} new · ${u.upd.length} updates · ${u.unchanged} unchanged${u.fix.length?` · ${u.fix.length} need fixing`:''}`,buttons:`<button class="btn primary" data-act="applyUpload">ADD ${nAdd} USERS</button>`});
+}
+
+/* ---------------- library + settings ---------------- */
+function scrLibrary(){
+  const a=AD();const q=(a.q.lib||'').toLowerCase();const ft=a.f.lt||'',fu=a.f.lu||'',fb=a.f.lb||'';
+  let list=a.files.filter(f=>(!q||f.name.toLowerCase().includes(q))&&(!ft||f.type===ft)&&(!fu||(fu==='used'?!!f.used:!f.used))&&(!fb||f.by===fb));
+  list=sortBy('lib',list,{name:f=>f.name,type:f=>f.type,added:f=>new Date(f.added).getTime()});
+  const rows=list.map((f,i)=>`<tr><td><div class="row" style="gap:12px"><span class="ftype" style="background:${f.col}">${f.ext}</span><div><div style="font-weight:600">${esc(f.name)}</div><div class="cap">${f.size}</div></div></div></td>
+    <td class="ann">${f.type}</td><td>${f.used?esc(f.used):'<span class="ann">Not used yet</span>'}</td><td>${esc(f.by)}${f.by==='Nectar'?BOT:''}</td><td>${f.added}</td>
+    <td style="text-align:right">${more('f-'+f.id,mi('Download','notInProto')+mi('Rename','notInProto')+'<hr>'+mi('Delete','rmFile',`data-id="${f.id}"`,{danger:true,dis:!!f.used}),i>list.length-3)}</td></tr>`).join('');
+  return ashell('library',`<div class="apage"><div class="ahead"><div style="flex:1"><h1 class="h3" style="font-size:24px">Library</h1><div class="ann">Files this program uses in its messages and setup, plus files Nectar generates.</div></div><button class="btn primary" data-act="uploadFile">UPLOAD FILE</button></div>
+    <div class="toolbar" style="margin-top:16px"><div class="filter">${I('search','sm')}<input id="q-lib" placeholder="Search files" value="${esc(a.q.lib||'')}" data-model="ad.q.lib" data-live="1"></div>
+     ${selF('f-lt','Type',ft,[{v:'',t:'All'},'Document','Image','Video','Spreadsheet'],'ad.f.lt')}${selF('f-lu','Used in',fu,[{v:'',t:'All'},{v:'used',t:'Used'},{v:'unused',t:'Not used yet'}],'ad.f.lu')}${selF('f-lb','Added by',fb,[{v:'',t:'All'},...[...new Set(a.files.map(f=>f.by))]],'ad.f.lb')}</div>
+    <table class="atable"><colgroup><col><col style="width:120px"><col style="width:280px"><col style="width:160px"><col style="width:120px"><col style="width:56px"></colgroup>
+     <thead><tr><th>${sortH('lib','name','File')}</th><th>${sortH('lib','type','Type')}</th><th>Used in</th><th>Added by</th><th>${sortH('lib','added','Added')}</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="ann" style="text-align:center;padding:32px">No files match</td></tr>'}</tbody></table>
+    <div class="cap" style="text-align:right;margin-top:12px">${plural(list.length,'item')}</div></div>`);
+}
+function scrSettings(){return ashell('settings',`<div class="apage"><h1 class="h3" style="font-size:24px">Settings</h1><div class="empty" style="padding:56px 0">${I('gear')}<div class="h5">Not designed yet</div><div class="ann">Program settings aren’t part of this prototype.</div></div></div>`)}
+
+/* ---------------- modals ---------------- */
+const mwrap=(title,body,actions,w=520)=>`<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" style="width:${w}px"><h2 class="h4" id="mt">${title}</h2><div class="stack" style="margin-top:16px">${body}</div><div class="actions">${actions}</div></div></div>`;
+const btnF=(l,act,extra='')=>`<button class="btn flat" data-act="${act}" ${extra}>${l}</button>`;
+const btnP=(l,act,extra='')=>`<button class="btn primary" data-act="${act}" data-focus ${extra}>${l}</button>`;
+function adminModal(){
+  const a=AD();const md=a.md||{};
+  switch(S.modal){
+  case 'a-newtype':{const card=(v,title,desc)=>`<label class="opt ${md.kind===v?'on':''}" style="padding:16px 20px"><input type="radio" name="ntype" value="${v}" data-change="mNewType" ${md.kind===v?'checked':''}><div><div class="h5">${title}</div><div class="ann" style="margin-top:4px">${desc}</div></div></label>`;
+    return mwrap('New template',`<p class="ann">What kind of message is this?</p><div style="display:grid;gap:12px">${card('Prompt','Prompt','Asks teachers a reflection question. Can repeat on a schedule.')}${card('Announcement','Announcement','News or a reminder for groups or trainers. Sends once.')}</div>`,btnF('CANCEL','closeModal')+btnP('CONTINUE','doNewType'))}
+  case 'a-launch': return mwrap(`Launch ${esc(progName())}?`,`<p>Nectar sends each group’s invite link to its teachers on WhatsApp. Trainers get their alerts and digests. The first prompt goes out on Mon 18 Jan at 08:00 EAT.</p>
+      ${a.groups.some(g=>!g.trainer)?`<div class="alert warning">${I('warn')}<div>${plural(a.groups.filter(g=>!g.trainer).length,'group')} ${a.groups.filter(g=>!g.trainer).length===1?'has':'have'} no trainer. They’ll still launch, without digests or alerts.</div></div>`:''}`,btnF('CANCEL','closeModal')+btnP('LAUNCH PROGRAM','doLaunch'));
+  case 'a-deltpl':{const t=a.templates.find(x=>x.id===md.id);return mwrap(`Delete “${esc(t.name)}”?`,`<p>It’s removed from the schedule and deleted from Meta. Messages already sent stay in the groups. You can’t undo this.</p><p class="cap">Meta won’t let you reuse this template name for 30 days.</p>`,btnF('CANCEL','closeModal')+btnP('DELETE','doDelTpl'))}
+  case 'a-rename':return mwrap('Rename group',field('m-name','Group name',md.name,{model:'ad.md.name',err:md.err,help:'Teachers see this name in WhatsApp'}),btnF('CANCEL','closeModal')+btnP('SAVE','doRename'));
+  case 'a-trainer':{const g=grp(md.id);return mwrap(g.trainer?'Change trainer':'Add trainer',`<p class="ann">${esc(g.name)}</p>${selF('m-tr','Trainer',md.tr||'',[{v:'',t:'No trainer'},...a.trainers.map(t=>({v:t.id,t:`${t.name} · ${t.district}`}))],'ad.md.tr')}<div class="help" style="margin-left:0">Trainers aren’t in the group chat. They get the group’s digest and alerts.</div>`,btnF('CANCEL','closeModal')+btnP('SAVE','doTrainer'))}
+  case 'a-delgrp':{const g=grp(md.id);const n=gMembers(g.id).length;return mwrap(`Delete ${esc(g.name)}?`,`<p>The group is removed on WhatsApp for everyone. ${n?`Its ${plural(n,'teacher')} will be listed as “Not in a group”.`:''} You can’t undo this.</p>`,btnF('CANCEL','closeModal')+btnP('DELETE GROUP','doDelGroup'))}
+  case 'a-newgrp':{const trs=a.trainers.filter(t=>!md.district||t.district===md.district);
+    return mwrap('New group',`<p class="ann">${md.fromEdit?`Name the group and choose its trainer. The ${plural(md.n,'selected teacher')} will move into it.`:'Name the group and choose its trainer. You’ll add teachers next.'}</p>
+      ${field('m-gname','Group name',md.name,{model:'ad.md.name',err:md.err,help:'Teachers see this name in WhatsApp'})}
+      ${selF('m-gd','District',md.district||'',[{v:'',t:'Choose a district'},...DISTRICTS],'ad.md.district')}
+      <div>${selF('m-gt','Trainer',md.tr||'',[{v:'',t:'Choose later'},...trs.map(t=>({v:t.id,t:t.name}))],'ad.md.tr')}<div class="help">${md.district?`Trainers in ${md.district}. `:''}A trainer can lead more than one group.</div></div>`,btnF('CANCEL','closeModal')+(md.fromEdit?btnP('CREATE GROUP','doEgNewGroup'):btnP('CONTINUE','doNewGroup')))}
+  case 'a-user':{const ctx=md.ctx;const isNew=ctx==='add';const e=md.err||{};
+    const gopts=a.groups.filter(g=>(!md.district||g.district===md.district)&&(gMembers(g.id).length<MAX||g.id===md.group)).map(g=>({v:g.id,t:`${g.name} (${gMembers(g.id).length}/${MAX})`}));
+    const note=ctx==='upload'?'':md.role==='trainer'?'Trainers aren’t added to group chats. They get digests and alerts for their groups.':(md.group?(L()?'They’ll get a WhatsApp invite to the group when you save.':'They’ll get a WhatsApp invite to the group when you launch the program.'):'They’ll get a WhatsApp invite once they’re in a group.');
+    return mwrap(isNew?'Add user':ctx==='upload'?'Edit details':'Edit details',`
+      <div><div class="cap" style="margin-bottom:8px">Role</div><div class="radios"><label class="chk"><input type="radio" name="urole" value="teacher" data-change="mRole" ${md.role==='teacher'?'checked':''}> Teacher</label><label class="chk"><input type="radio" name="urole" value="trainer" data-change="mRole" ${md.role==='trainer'?'checked':''}> Trainer</label></div></div>
+      ${field('m-un','Name',md.name,{model:'ad.md.name',err:e.name})}${field('m-up','Phone',md.phone,{model:'ad.md.phone',err:e.phone,help:'Include the country code, like +256'})}
+      <div>${selF('m-ud','District',md.district||'',[{v:'',t:'Choose a district'},...DISTRICTS],'ad.md.district')}${e.district?`<div class="errtext">${e.district}</div>`:''}</div>
+      ${field('m-us','School (optional)',md.school||'',{model:'ad.md.school'})}${field('m-usub','Subjects (optional)',md.subjects||'',{model:'ad.md.subjects',help:'Separate subjects with commas'})}
+      ${md.role==='teacher'&&ctx!=='upload'?`<div>${selF('m-ug','Group (optional)',md.group||'',[{v:'',t:'Not in a group'},...gopts],'ad.md.group')}<div class="help">${md.district?`Only groups in ${md.district} with space are listed`:'Choose a district to see its groups'}</div></div>`:''}
+      ${note?`<div class="note">${I('info','sm')}<span>${note}</span></div>`:''}`,
+      (ctx==='edit'?`<button class="btn flat danger" data-act="rmUser" data-id="${md.id}" style="margin-right:auto">REMOVE USER</button>`:'')+btnF('CANCEL','closeModal')+btnP(isNew?'ADD USER':'SAVE','doUser'),560)}
+  case 'a-addgrp':{const ids=md.ids;const ppl=ids.map(id=>a.teachers.find(t=>t.id===id));const d=ppl[0].district;const need=ids.length;
+    const q=(md.q||'').toLowerCase();const gs=a.groups.filter(g=>(md.all||g.district===d||!d)&&(!q||g.name.toLowerCase().includes(q)));
+    const title=need===1?`${ppl[0].group?'Move':'Add'} ${esc(ppl[0].name)} to a group`:`Add ${need} teachers to a group`;
+    const opts=gs.map(g=>{const n=gMembers(g.id).filter(t=>!ids.includes(t.id)).length;const full=n+need>MAX;const cur=need===1&&ppl[0].group===g.id;
+      return `<label class="gopt ${md.g===g.id?'on':''} ${full||cur?'dis':''}"><input type="radio" name="pickg" value="${g.id}" data-change="mPickG" ${md.g===g.id?'checked':''} ${full||cur?'disabled':''}>
+        <div style="flex:1"><div style="font-weight:600">${esc(g.name)}${cur?' <span class="cap">(current)</span>':''}</div><div class="cap">Trainer: ${esc(trn(g.trainer)?.name||'None')}</div></div><span class="ann">${full?(MAX-n<=0?'Full':`${MAX-n} ${MAX-n===1?'spot':'spots'} left`):`${n} of ${MAX} teachers`}</span></label>`}).join('');
+    const note=L()?(need===1?`${esc(ppl[0].name.split(' ')[0])} will get a WhatsApp message with the link to join the group.`:'They’ll each get a WhatsApp message with the link to join the group.'):'Invites go out when you launch the program.';
+    return mwrap(title,`<p class="ann">${md.all?'Showing all groups.':`Showing groups in ${esc(d)}.`} Groups hold up to ${MAX} teachers.</p>
+      <div class="filter">${I('search','sm')}<input id="m-gq" placeholder="Search groups" value="${esc(md.q||'')}" data-model="ad.md.q" data-live="1"></div>
+      <div class="scrollist" style="margin-top:0">${opts||'<div class="ann" style="padding:12px">No groups match</div>'}</div>
+      ${md.all?'':`<div><button class="btn flat" data-act="mAllGroups">SHOW GROUPS IN OTHER DISTRICTS</button></div>`}
+      <div class="note">${I('info','sm')}<span>${note}</span></div>`,btnF('CANCEL','closeModal')+btnP(need===1&&ppl[0].group?'MOVE':'ADD TO GROUP','doAddGrp',md.g?'':'disabled'),600)}
+  }
+  return '';
+}
+
+/* ---------------- edit groups (reuses the wizard grouping step) ---------------- */
+function enterEditGroups(newGroup){
+  const a=AD();
+  S.groups=a.groups.map(g=>({id:g.id,name:g.name,trainer:g.trainer}));
+  S.trainers=a.trainers.map(t=>({...t}));S.teachers=a.teachers.map(t=>({...t}));
+  S.egSnap={groups:S.groups.map(g=>({...g})),map:Object.fromEntries(S.teachers.map(t=>[t.id,t.group]))};
+  S.egNewId=null;if(newGroup){const id=nid('g');S.egNewId=id;S.groups.push({id,name:newGroup.name,trainer:newGroup.tr||null,district:newGroup.district})}
+  S.groups.sort((x,y)=>x.name.localeCompare(y.name,undefined,{numeric:true}));
+  S.selected=new Set();S.filter='';S.sort={key:'group',dir:1};S.menuOpen=false;S.renaming=null;computeOrder();
+  S.screen='editgroups';window.scrollTo(0,0);render();
+}
+function egChanges(){const s=S.egSnap;let n=0;const was=Object.fromEntries(s.groups.map(g=>[g.id,g]));
+  S.teachers.forEach(t=>{if(s.map[t.id]!==t.group)n++});
+  S.groups.forEach(g=>{const w=was[g.id];if(!w)n++;else{if(w.name!==g.name)n++;if(w.trainer!==g.trainer)n++}});
+  n+=s.groups.filter(g=>!S.groups.some(x=>x.id===g.id)).length;return n}
+function editShell(inner){const n=egChanges();const moved=S.teachers.filter(t=>S.egSnap.map[t.id]!==t.group).length;const newG=S.groups.filter(g=>!S.egSnap.groups.some(x=>x.id===g.id)).length;
+  const parts=[];if(newG)parts.push(plural(newG,'new group'));if(moved)parts.push(plural(moved,'teacher')+' moved');const other=n-newG-moved;if(other>0)parts.push(plural(other,'other change'));
+  return fullShell('Edit groups',inner,{left:parts.length?parts.join(' · '):'No unsaved changes',buttons:`<button class="btn primary" data-act="saveEditGroups" ${n?'':'disabled'}>SAVE CHANGES</button>`})}
+function saveEditGroups(){const a=AD();const old=Object.fromEntries(a.groups.map(g=>[g.id,g]));
+  a.groups=S.groups.map(g=>{const o=old[g.id];return o?{...o,name:g.name,trainer:g.trainer}:{id:g.id,name:g.name,trainer:g.trainer,district:g.district||g.name.split(' · ')[0],last:null}});
+  let moved=0;S.teachers.forEach(t=>{const real=a.teachers.find(x=>x.id===t.id);if(!real)return;if(real.group!==t.group){moved++;real.group=t.group;real.wa=t.group?(L()?'invited':'notinv'):'notinv';real.last=null}
+    Object.assign(real,{name:t.name,phone:t.phone,district:t.district,school:t.school,subjects:t.subjects})});
+  a.teachers=a.teachers.filter(t=>S.teachers.some(x=>x.id===t.id));
+  snack(moved&&L()?`Changes saved. ${plural(moved,'teacher')} will get their new group’s invite link.`:'Changes saved');aGo('groups');
+}
+
+/* ---------------- admin actions ---------------- */
+const userById=id=>AD().teachers.find(t=>t.id===id)||AD().trainers.find(t=>t.id===id);
+Object.assign(A,{
+  toPrograms(){S.screen='programs';render()},
+  openAdmin(){aGo('home')},
+  atab(el){aGo(el.dataset.tab,{group:null})},
+  amenu(el,e){e.stopPropagation();const id=el.dataset.id;S.ad.menu=S.ad.menu===id?null:id;render()},
+  asort(el){const sc=el.dataset.scope,k=el.dataset.k;const s=S.ad.sort[sc];S.ad.sort[sc]=s&&s.k===k?{k,d:-s.d}:{k,d:1};render()},
+  closeBanner(el){S.ad[el.dataset.b]=false;render()},
+  notInProto(){S.ad.menu=null;snack('That isn’t part of this prototype.');render()},
+  setRange(el){S.ad.range=el.dataset.r;S.ad.menu=null;render()},
+  askLaunch(){openModal('a-launch')},
+  doLaunch(){S.ad.launched=true;S.ad.teachers.forEach(t=>{if(t.group&&t.wa==='notinv')t.wa='invited'});S.modal=null;snack('Program launched. Group invites are going out on WhatsApp.');render()},
+  stab(el){S.ad.stab=el.dataset.s;S.ad.menu=null;render()},
+  thisWeek(){S.ad.week=0;S.ad.cal=false;render()},
+  weekStep(el){S.ad.week+=+el.dataset.d;render()},
+  toggleCal(){S.ad.cal=!S.ad.cal;S.ad.calMonth=addDays(START,S.ad.week*7).getMonth()+(addDays(START,S.ad.week*7).getFullYear()-2027)*12;render()},
+  calMonth(el){S.ad.calMonth+=+el.dataset.d;render()},
+  pickDay(el){S.ad.week=+el.dataset.off;S.ad.cal=false;render()},
+  itemAct(el){const st=el.dataset.st,id=el.dataset.tpl;
+    if(st==='paused'){if(id==='checkin')S.ad.checkinStatus='approved';const t=S.ad.templates.find(x=>x.id===id);if(t)t.status='approved';snack('Weekly check-in resumed. It sends on Sun 24 Jan at 18:00 EAT.');render();return}
+    openEditor(id,{sent:st==='sent'})},
+  newTpl(){S.ad.md={kind:'Prompt'};openModal('a-newtype')},
+  doNewType(){const k=S.ad.md.kind;S.modal=null;openEditor(null,{kind:k})},
+  openTpl(el){S.ad.menu=null;openEditor(el.dataset.id)},
+  archiveTpl(el){const a=AD();const i=a.templates.findIndex(t=>t.id===el.dataset.id);const t=a.templates[i];a.templates.splice(i,1);S.ad.menu=null;snack(`${t.name} archived`,()=>a.templates.splice(i,0,t));render()},
+  askDelTpl(el){S.ad.md={id:el.dataset.id};S.ad.menu=null;openModal('a-deltpl')},
+  doDelTpl(){const a=AD();const t=a.templates.find(x=>x.id===a.md.id);a.templates=a.templates.filter(x=>x!==t);S.modal=null;snack(`${t.name} deleted`);render()},
+  // editor
+  focusTok(el,e){if(e.target.closest('.vchip')||e.target.classList.contains('seg'))return;const segs=el.querySelectorAll('.seg');const s=segs[segs.length-1];if(s){s.focus();const r=document.createRange();r.selectNodeContents(s);r.collapse(false);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}},
+  insertVar(el){S.ad.vm={f:el.dataset.f,mode:'insert'};S.ad.vq='';render();document.getElementById('vq')?.focus()},
+  vchip(el){S.ad.vm={f:el.dataset.f,mode:'chip',i:+el.dataset.i};render()},
+  pickVar(el){const vm=S.ad.vm,e=S.ad.ed,k=el.dataset.k;
+    if(vm.mode==='swap'){e[vm.f][vm.i]={v:k}}else{e[vm.f].push({v:k},'')}
+    e[vm.f]=norm(e[vm.f]);S.ad.lastVar={f:vm.f,label:VARS[k].label};S.ad.vm=null;delete S.ad.edErr[vm.f];render()},
+  pickSample(el){const vm=S.ad.vm;S.ad.ed[vm.f][vm.i].s=el.dataset.v;S.ad.vm=null;render()},
+  swapVar(){S.ad.vm={...S.ad.vm,mode:'swap'};S.ad.vq='';render();document.getElementById('vq')?.focus()},
+  rmVar(){const vm=S.ad.vm;S.ad.ed[vm.f].splice(vm.i,1);S.ad.ed[vm.f]=norm(S.ad.ed[vm.f]);S.ad.vm=null;render()},
+  mediaPick(){const e=S.ad.ed;e.media={state:'loading',file:'trainer-visit-week-4.jpg'};render();setTimeout(()=>{if(S.ad.ed===e){e.media={state:'done',file:'trainer-visit-week-4.jpg',meta:'Image · JPG · 840 KB',kind:'IMG'};render()}},900)},
+  recClear(){const e=S.ad.ed;e[e.recMode==='groups'?'recGroups':'recTrainers']=[];render()},
+  mediaBig(){S.ad.ed.media={state:'big'};render()},
+  mediaRm(){S.ad.ed.media={state:'empty'};render()},
+  edCancel(){S.screen='admin';S.ad.tab='schedule';render()},
+  edDraft(){saveTpl('draft')},
+  edSubmit(){saveTpl('pending')},
+  // groups
+  openGroup(el){S.ad.menu=null;aGo('group',{group:el.dataset.id,gtab:el.dataset.t||'conv'})},
+  gtab(el){S.ad.gtab=el.dataset.t;S.ad.menu=null;render()},
+  copyLink(){S.ad.menu=null;snack(L()?'Invite link copied':'Invite links are created when you launch the program');render()},
+  askRename(el){const g=grp(el.dataset.id);S.ad.md={id:g.id,name:g.name};S.ad.menu=null;openModal('a-rename')},
+  doRename(){const md=S.ad.md;const v=(md.name||'').trim();if(!v){md.err='Enter a group name';render();return}
+    if(AD().groups.some(g=>g.id!==md.id&&g.name.toLowerCase()===v.toLowerCase())){md.err='Another group already has this name';render();return}
+    grp(md.id).name=v;S.modal=null;snack(L()?'Group renamed. Teachers see the new name in WhatsApp.':'Group renamed');render()},
+  askTrainer(el){const g=grp(el.dataset.id);S.ad.md={id:g.id,tr:g.trainer||''};S.ad.menu=null;openModal('a-trainer')},
+  doTrainer(){const md=S.ad.md;const g=grp(md.id);g.trainer=md.tr||null;S.modal=null;snack(g.trainer?`${trn(g.trainer).name} is now the trainer for ${g.name}`:`${g.name} has no trainer`);render()},
+  askDelGroup(el){S.ad.md={id:el.dataset.id};S.ad.menu=null;openModal('a-delgrp')},
+  doDelGroup(){const a=AD();const g=grp(a.md.id);gMembers(g.id).forEach(t=>{t.group=null;t.wa='notinv';t.last=null});a.groups=a.groups.filter(x=>x!==g);S.modal=null;snack(`${g.name} deleted`);aGo('groups')},
+  editGroups(){S.ad.menu=null;enterEditGroups()},
+  askNewGroup(){S.ad.md={name:'',district:'',tr:''};openModal('a-newgrp')},
+  doNewGroup(){const md=S.ad.md;const v=(md.name||'').trim();if(!v){md.err='Enter a group name';render();return}
+    if(AD().groups.some(g=>g.name.toLowerCase()===v.toLowerCase())){md.err='Another group already has this name';render();return}
+    S.modal=null;enterEditGroups({name:v,tr:md.tr,district:md.district})},
+  saveEditGroups(){saveEditGroups()},
+  egNewGroup(){const ids=[...S.selected];if(!ids.length||ids.length>MAX)return;const d=S.teachers.find(t=>t.id===ids[0])?.district||'';
+    S.menuOpen=false;S.ad.md={name:'',district:d,tr:'',fromEdit:true,n:ids.length};openModal('a-newgrp')},
+  doEgNewGroup(){const md=S.ad.md;const v=(md.name||'').trim();if(!v){md.err='Enter a group name';render();return}
+    if(S.groups.some(g=>g.name.toLowerCase()===v.toLowerCase())){md.err='Another group already has this name';render();return}
+    const snap=snapshot();const id=nid('g');S.groups.push({id,name:v,trainer:md.tr||null,district:md.district});
+    S.groups.sort((x,y)=>x.name.localeCompare(y.name,undefined,{numeric:true}));
+    const ids=[...S.selected];ids.forEach(tid=>{const t=S.teachers.find(x=>x.id===tid);if(t)t.group=id});
+    S.selected.clear();S.modal=null;computeOrder();snack(`${v} created with ${plural(ids.length,'teacher')}`,()=>restore(snap));render();
+    setTimeout(()=>document.getElementById('sec-'+id)?.scrollIntoView({behavior:'smooth',block:'start'}),50)},
+  fsCancel(){if(S.screen==='upload')aGo('users');else aGo('groups')},
+  rmFromGroup(el){const t=userById(el.dataset.id);const old=t.group,ow=t.wa;t.group=null;t.wa='notinv';S.ad.menu=null;snack(`${t.name} removed from ${grp(old).name}`,()=>{t.group=old;t.wa=ow});render()},
+  // users
+  askUser(el){S.ad.menu=null;const id=el?.dataset?.id;
+    if(id){const p=userById(id);S.ad.md={ctx:'edit',id,role:p.role,name:p.name,phone:p.phone,district:p.district,school:p.school,subjects:p.subjects,group:p.group||''}}
+    else S.ad.md={ctx:'add',role:'teacher',name:'',phone:'',district:'',school:'',subjects:'',group:''};
+    openModal('a-user')},
+  doUser(){const md=S.ad.md,a=AD(),e={};
+    if(!md.name.trim())e.name='Enter a name';const ph=md.phone.trim();
+    if(!ph)e.phone='Enter a phone number';else if(!/^\+\d{1,3}[\s\d•X-]{6,}$/i.test(ph))e.phone='Start with + and the country code, like +256';
+    else{const dup=[...a.trainers,...a.teachers].find(x=>x.id!==md.id&&x.phone.replace(/\s/g,'')===ph.replace(/\s/g,''));if(dup)e.phone=`${esc(dup.name)} already uses this number`}
+    if(!md.district)e.district='Choose a district';
+    if(Object.keys(e).length){md.err=e;render();return}
+    const data={name:md.name.trim(),phone:ph,district:md.district,school:md.school.trim(),subjects:md.subjects.trim()};
+    if(md.ctx==='upload'){const u=S.ad.up;const list=md.from==='fix'?u.fix:u.add;const r=list.find(x=>x.uid===md.uid);Object.assign(r,data,{role:md.role});
+      if(md.from==='fix'){delete r.err;u.fix=u.fix.filter(x=>x!==r);u.add.push(r);snack(`${r.name} is ready to add`)}S.modal=null;render();return}
+    if(md.ctx==='add'){const p={id:nid('p'),...data,role:md.role,group:md.role==='teacher'?(md.group||null):null,wa:md.role==='trainer'?'joined':(md.group&&L()?'invited':'notinv'),last:null};
+      (md.role==='trainer'?a.trainers:a.teachers).push(p);S.modal=null;snack(`${p.name} added`);render();return}
+    const p=userById(md.id);const wasRole=p.role;Object.assign(p,data);
+    if(md.role!==wasRole){(wasRole==='trainer'?a.trainers:a.teachers).splice((wasRole==='trainer'?a.trainers:a.teachers).indexOf(p),1);p.role=md.role;
+      if(md.role==='trainer'){p.group=null;p.wa='joined';a.trainers.push(p)}else{a.groups.forEach(g=>{if(g.trainer===p.id)g.trainer=null});p.wa='notinv';a.teachers.push(p)}}
+    if(p.role==='teacher'&&(md.group||null)!==p.group){p.group=md.group||null;p.wa=p.group&&L()?'invited':'notinv';p.last=null}
+    S.modal=null;snack(`${p.name}’s details saved`);render()},
+  rmUser(el){const a=AD();const p=userById(el.dataset.id);const list=p.role==='trainer'?a.trainers:a.teachers;const i=list.indexOf(p);const trG=a.groups.filter(g=>g.trainer===p.id);
+    list.splice(i,1);trG.forEach(g=>g.trainer=null);a.sel.delete(p.id);S.ad.menu=null;S.modal=null;
+    snack(`${p.name} removed`,()=>{list.splice(i,0,p);trG.forEach(g=>g.trainer=p.id)});render()},
+  resend(el){S.ad.menu=null;snack(`Invite sent again to ${userById(el.dataset.id).name}`);render()},
+  viewTrainerGroups(el){S.ad.menu=null;S.ad.f.gt=el.dataset.id;aGo('groups')},
+  filterUngrouped(){S.ad.f.ug='none';render()},
+  uClear(){S.ad.sel.clear();render()},
+  showMore(){S.ad.shown+=25;render()},
+  askAddGrp(el){S.ad.menu=null;S.ad.md={ids:[el.dataset.id],g:null,q:'',all:false};openModal('a-addgrp')},
+  askAddGrpSel(){S.ad.md={ids:[...S.ad.sel],g:null,q:'',all:false};openModal('a-addgrp')},
+  mAllGroups(){S.ad.md.all=true;render()},
+  doAddGrp(){const md=S.ad.md;const g=grp(md.g);const ppl=md.ids.map(id=>AD().teachers.find(t=>t.id===id));const prev=ppl.map(p=>[p,p.group,p.wa,p.last]);
+    ppl.forEach(p=>{p.group=g.id;p.wa=L()?'invited':'notinv';p.last=null});S.ad.sel.clear();S.modal=null;
+    snack(ppl.length===1?`${ppl[0].name} added to ${g.name}`:`${ppl.length} teachers added to ${g.name}`,()=>prev.forEach(([p,gr,wa,l])=>{p.group=gr;p.wa=wa;p.last=l}));render()},
+  // upload
+  startUpload(){startUpload()},
+  doUpload(){S.ad.up={state:'loading'};render();setTimeout(()=>{if(S.screen==='upload'){S.ad.up=buildUploadReview();render()}},900)},
+  editUpRow(el){const u=S.ad.up;const list=el.dataset.ctx==='fix'?u.fix:u.add;const r=list.find(x=>x.uid===el.dataset.uid);
+    S.ad.md={ctx:'upload',from:el.dataset.ctx,uid:r.uid,role:r.role,name:r.name,phone:r.phone,district:DISTRICTS.includes(r.district)?r.district:'',school:r.school,subjects:r.subjects,err:r.err?{phone:r.err.phone?'Enter a phone number':undefined,district:r.err.district?'Choose a district':undefined}:{}};
+    Object.keys(S.ad.md.err).forEach(k=>S.ad.md.err[k]===undefined&&delete S.ad.md.err[k]);openModal('a-user')},
+  applyUpload(){const a=AD(),u=S.ad.up;
+    u.add.forEach(r=>{const p={id:nid('p'),name:r.name,phone:r.phone,district:r.district,school:r.school,subjects:r.subjects,role:r.role,group:null,wa:r.role==='trainer'?'joined':'notinv',last:null};(r.role==='trainer'?a.trainers:a.teachers).push(p)});
+    u.upd.forEach(r=>{const p=a.teachers.find(t=>t.id===r.id);if(p)p[r.change.field]=r.change.now});
+    snack(`${plural(u.add.length,'person','people')} added and ${u.upd.length} updated.${u.fix.length?` ${plural(u.fix.length,'row')} skipped.`:''}`);S.ad.bannerU=true;aGo('users')},
+  // library
+  uploadFile(){const a=AD();a.files.unshift({id:nid('f'),name:'week-5-poster.png',size:'520 KB',type:'Image',used:null,by:'Kenneth Oroma',added:'21 Jan 2027',col:'#5c8ee6',ext:'IMG'});snack('week-5-poster.png uploaded');render()},
+  rmFile(el){const a=AD();const i=a.files.findIndex(f=>f.id===el.dataset.id);const f=a.files[i];a.files.splice(i,1);S.ad.menu=null;snack(`${f.name} deleted`,()=>a.files.splice(i,0,f));render()}
+});
+function saveTpl(status){
+  const e=S.ad.ed,a=AD();const err={};
+  if(status==='pending'){
+    if(!tokText(e.body).trim())err.body='Enter the message body';
+    else if(typeof e.body.at(-1)==='string'&&!e.body.at(-1).trim()&&e.body.length>1)err.body='The body can’t end with a variable. Add some text after it.';
+    if((e.isNew||e.kind==='Announcement')&&!e.name.trim())err.name='Enter a template name';
+    if(e.kind!=='Automatic'&&e.recMode!=='fixed'&&recSummary(e).n===0)err.rec=e.recMode==='district'&&!e.recDistrict?'Choose a district':'Choose at least one recipient';
+    if(tokText(e.body).length>1024)err.body='The body can be up to 1024 characters';
+  }
+  if(Object.keys(err).length){S.ad.edErr=err;render();document.querySelector('.errtext')?.scrollIntoView({block:'center'});return}
+  const sched=e.kind==='Automatic'||e.trigger?null:`${e.date.replace(/ 2027$/,'')} · ${e.time} EAT`;
+  if(e.isNew){a.templates.push({id:nid('tp'),name:e.name.trim()||'Untitled template',desc:tokText(e.body).slice(0,60),type:e.kind,author:'Kenneth Oroma',rec:toGroups(e)?'Groups':'Trainers',recMode:e.recMode,recDistrict:e.recDistrict,recGroups:e.recGroups,recTrainers:e.recTrainers,freq:e.kind==='Announcement'||e.repeat==='Does not repeat'?'Once':e.repeat==='Weekly'?'Every '+e.date.split(' ')[0].replace('Mon','Monday').replace('Fri','Friday'):e.repeat,sched,created:'21 Jan 2027',status,header:e.header,body:e.body,footer:e.footer,date:e.date,time:e.time,repeat:e.repeat})}
+  else{const t=a.templates.find(x=>x.id===e.id);Object.assign(t,{status:t.status==='approved'&&status==='draft'?'approved':status,header:e.header,body:e.body,footer:e.footer,media:e.headerType==='media'?e.media:null});if(e.id==='review')S.ad.tplStatus={review:t.status};if(status==='pending'&&e.id==='checkin')S.ad.checkinStatus='pending'}
+  snack(status==='pending'?'Submitted to Meta for review. This usually takes up to 24 hours.':'Draft saved');
+  S.screen='admin';S.ad.tab='schedule';if(e.isNew)S.ad.stab='tpl';S.ad.ed=null;window.scrollTo(0,0);render();
+}
+Object.assign(CH,{
+  edKind(el){S.ad.ed.kind=el.value;if(el.value==='Prompt'&&!toGroups(S.ad.ed))S.ad.ed.recMode='allGroups';if(el.value==='Announcement'){S.ad.ed.repeat='Does not repeat'}else{S.ad.ed.repeat='Weekly'}render()},
+  edHead(el){S.ad.ed.headerType=el.value;render()},
+  mRole(el){S.ad.md.role=el.value;render()},
+  mNewType(el){S.ad.md.kind=el.value;render()},
+  recPick(el){const e=S.ad.ed;const k=e.recMode==='groups'?'recGroups':'recTrainers';const id=el.dataset.id;e[k]=el.checked?[...e[k],id]:e[k].filter(x=>x!==id);delete S.ad.edErr.rec;render()},
+  mPickG(el){S.ad.md.g=el.value;render()},
+  uSel(el){el.checked?S.ad.sel.add(el.dataset.id):S.ad.sel.delete(el.dataset.id);render()},
+  uSelAll(el){const ids=[...document.querySelectorAll('[data-change=uSel]')].map(x=>x.dataset.id);ids.forEach(id=>el.checked?S.ad.sel.add(id):S.ad.sel.delete(id));render()}
+});
+// live search fields + editable message segments
+document.addEventListener('input',e=>{const el=e.target;
+  if(el.dataset.live){render();return}
+  if(el.classList.contains('seg')){const f=el.dataset.f,i=+el.dataset.i;S.ad.ed[f][i]=el.textContent;delete S.ad.edErr[f];updateEdLive()}});
+// selects that change modal content need a re-render (handled by the generic select model handler)
+// close admin menus when clicking elsewhere
+document.addEventListener('click',e=>{if(!S.ad)return;
+  const inMenu=e.target.closest('.menuwrap')||e.target.closest('.vmenu')||e.target.closest('[data-act=vchip]')||e.target.closest('[data-act=insertVar]');
+  let changed=false;
+  if(S.ad.menu&&!e.target.closest('.menuwrap')){S.ad.menu=null;changed=true}
+  if(S.ad.cal&&!e.target.closest('.menuwrap')&&!e.target.closest('.calpop')){S.ad.cal=false;changed=true}
+  if(S.ad.vm&&!inMenu){S.ad.vm=null;changed=true}
+  if(changed&&!e.target.closest('[data-act]'))render();
+},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.ad&&(S.ad.menu||S.ad.vm||S.ad.cal)){S.ad.menu=null;S.ad.vm=null;S.ad.cal=false;render()}});
+if(location.hash==='#admin'){S.ad=seedAdmin();S.program.name='Tororo Science & Maths pilot';S.program.partner='Asante Africa';S.screen='admin'}
+
+A.demoAdmin=()=>{S.ad=seedAdmin();S.program.name='Tororo Science & Maths pilot';S.program.partner='Asante Africa';aGo('home')};
+
 render();
 </script>
 </body>
