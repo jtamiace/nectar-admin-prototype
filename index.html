@@ -1086,7 +1086,6 @@ function scrHome(){
   const optMenu=a.menu==='opts'?`<div class="amenu">${mi('Edit program details','notInProto')}${mi('Duplicate program','notInProto')}<hr>${mi('Archive program','notInProto','',{danger:true})}</div>`:'';
   return ashell('home',`<div class="apage">
     <div class="ahead"><h1 class="h3" style="font-size:28px">${esc(progName())}</h1>
-      <span class="menuwrap"><button class="btn secondary" data-act="amenu" data-id="opts">OPTIONS ${I('caret','sm')}</button>${optMenu}</span>
       ${L()?'':'<button class="btn primary" data-act="askLaunch">LAUNCH PROGRAM</button>'}</div>
     <div class="row" style="margin:20px 0 16px"><h2 class="h4" style="flex:1">Activity</h2>
       <span class="menuwrap"><button class="btn secondary" data-act="amenu" data-id="range">${r[1].toUpperCase()} ${I('caret','sm')}</button>${rangeMenu}</span></div>
@@ -1412,7 +1411,20 @@ function scrLibrary(){
      <thead><tr><th>${sortH('lib','name','File')}</th><th>${sortH('lib','type','Type')}</th><th>Used in</th><th>Added by</th><th>${sortH('lib','added','Added')}</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="ann" style="text-align:center;padding:32px">No files match</td></tr>'}</tbody></table>
     <div class="cap" style="text-align:right;margin-top:12px">${plural(list.length,'item')}</div></div>`);
 }
-function scrSettings(){return ashell('settings',`<div class="apage"><h1 class="h3" style="font-size:24px">Settings</h1><div class="empty" style="padding:56px 0">${I('gear')}<div class="h5">Not designed yet</div><div class="ann">Program settings aren’t part of this prototype.</div></div></div>`)}
+function scrSettings(){
+  const a=AD();if(!a.set)a.set={name:progName(),partner:S.program.partner||'',language:S.program.language||'English',docs:[...(S.program.docs||[])]};const p=a.set;
+  const docs=p.docs.map((d,i)=>`<div class="filechip">${I('doc')}<span style="flex:1">${esc(d)}</span><button class="iconbtn" title="Remove" data-act="sRmDoc" data-i="${i}">${I('close','sm')}</button></div>`).join('');
+  return ashell('settings',`<div class="apage" style="max-width:960px"><h1 class="h3" style="font-size:24px">Settings</h1>
+    <div class="stack" style="margin-top:24px">
+    ${field('s-name','Program name',p.name,{model:'ad.set.name',err:a.setErr})}
+    ${field('s-partner','Organization name',p.partner,{model:'ad.set.partner'})}
+    <div>${selectField('s-lang','Language',p.language,['English','Luganda','Ateso','Swahili'].map(v=>({v,t:v})),{model:'ad.set.language'})}<div class="help">Used for bot messages and templates</div></div>
+    <div><h2 class="h5" style="margin-bottom:12px">Reference documents</h2>
+      <div class="drop"><div>Drag files here, or</div><button class="btn secondary" data-act="sAddDoc" ${p.docs.length>=SAMPLE_DOCS.length?'disabled':''}>CHOOSE FILES</button><div class="cap">PDF or Word documents</div></div>
+      ${docs?`<div style="margin-top:12px">${docs}</div>`:''}</div>
+    <div class="row"><span class="spacer"></span><button class="btn primary" data-act="sSave">SAVE CHANGES</button></div></div></div>
+   <div class="apage" style="max-width:960px"><div class="row"><h2 class="h5" style="flex:1">Delete program</h2><button class="btn flat danger" data-act="askDelProg">DELETE PROGRAM</button></div></div>`);
+}
 
 /* ---------------- modals ---------------- */
 const mwrap=(title,body,actions,w=520)=>`<div class="backdrop ${S.modalEnter?'enter':''}"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt" style="width:${w}px"><h2 class="h4" id="mt">${title}</h2><div class="stack" style="margin-top:16px">${body}</div><div class="actions">${actions}</div></div></div>`;
@@ -1423,6 +1435,7 @@ function adminModal(){
   switch(S.modal){
   case 'a-newtype':{const card=(v,title,desc)=>`<label class="opt ${md.kind===v?'on':''}" style="padding:16px 20px"><input type="radio" name="ntype" value="${v}" data-change="mNewType" ${md.kind===v?'checked':''}><div><div class="h5">${title}</div><div class="ann" style="margin-top:4px">${desc}</div></div></label>`;
     return mwrap('New template',`<p class="ann">What kind of message is this?</p><div style="display:grid;gap:12px">${card('Prompt','Prompt','Asks teachers a reflection question. Can repeat on a schedule.')}${card('Announcement','Announcement','News or a reminder for groups or trainers. Sends once.')}</div>`,btnF('CANCEL','closeModal')+btnP('CONTINUE','doNewType'))}
+  case 'a-delprog': return mwrap(`Delete ${esc(progName())}?`,`<p>Its groups, people, messages and files are deleted, and its WhatsApp groups are removed for everyone. You can’t undo this.</p>`,btnF('CANCEL','closeModal')+`<button class="btn primary" style="background:var(--error)" data-act="doDelProg">DELETE PROGRAM</button>`);
   case 'a-launch': return mwrap(`Launch ${esc(progName())}?`,`<p>Nectar sends each group’s invite link to its teachers on WhatsApp. Trainers get their alerts and digests. The first prompt goes out on Mon 18 Jan at 08:00 EAT.</p>
       ${a.groups.some(g=>!g.trainer)?`<div class="alert warning">${I('warn')}<div>${plural(a.groups.filter(g=>!g.trainer).length,'group')} ${a.groups.filter(g=>!g.trainer).length===1?'has':'have'} no trainer. They’ll still launch, without digests or alerts.</div></div>`:''}`,btnF('CANCEL','closeModal')+btnP('LAUNCH PROGRAM','doLaunch'));
   case 'a-deltpl':{const t=a.templates.find(x=>x.id===md.id);return mwrap(`Delete “${esc(t.name)}”?`,`<p>It’s removed from the schedule and deleted from Meta. Messages already sent stay in the groups. You can’t undo this.</p><p class="cap">Meta won’t let you reuse this template name for 30 days.</p>`,btnF('CANCEL','closeModal')+btnP('DELETE','doDelTpl'))}
@@ -1492,11 +1505,17 @@ const userById=id=>AD().teachers.find(t=>t.id===id)||AD().trainers.find(t=>t.id=
 Object.assign(A,{
   toPrograms(){S.screen='programs';render()},
   openAdmin(){aGo('home')},
-  atab(el){aGo(el.dataset.tab,{group:null})},
+  atab(el){if(el.dataset.tab==='settings')S.ad.set=null;aGo(el.dataset.tab,{group:null})},
   amenu(el,e){e.stopPropagation();const id=el.dataset.id;S.ad.menu=S.ad.menu===id?null:id;render()},
   asort(el){const sc=el.dataset.scope,k=el.dataset.k;const s=S.ad.sort[sc];S.ad.sort[sc]=s&&s.k===k?{k,d:-s.d}:{k,d:1};render()},
   closeBanner(el){S.ad[el.dataset.b]=false;render()},
   notInProto(){S.ad.menu=null;snack('That isn’t part of this prototype.');render()},
+  sAddDoc(){const p=S.ad.set;const next=SAMPLE_DOCS.find(d=>!p.docs.includes(d));if(next)p.docs.push(next);render()},
+  sRmDoc(el){S.ad.set.docs.splice(+el.dataset.i,1);render()},
+  sSave(){const p=S.ad.set;if(!p.name.trim()){S.ad.setErr='Enter a program name';render();return}S.ad.setErr=null;
+    Object.assign(S.program,{name:p.name.trim(),partner:p.partner.trim(),language:p.language,docs:[...p.docs]});snack('Settings saved');render()},
+  askDelProg(){openModal('a-delprog')},
+  doDelProg(){const n=progName();S.modal=null;S.ad=null;S.draft=null;S.program={name:'',partner:'',language:'English',docs:[]};S.screen='programs';snack(`${n} deleted`);render()},
   setRange(el){S.ad.range=el.dataset.r;S.ad.menu=null;render()},
   askLaunch(){openModal('a-launch')},
   doLaunch(){S.ad.launched=true;S.ad.teachers.forEach(t=>{if(t.group&&t.wa==='notinv')t.wa='invited'});S.modal=null;snack('Program launched. Group invites are going out on WhatsApp.');render()},
