@@ -1390,12 +1390,12 @@ function scrUpload(){
   return fullShell('Upload users',`<div class="page narrow stack"><div><h1 class="h3">Upload users</h1><p class="ann">${summary}</p></div>
     <div class="filechip" style="border:1px solid var(--fine);border-radius:4px">${I('doc')}<div style="flex:1">${u.file}</div><button class="btn flat" data-act="doUpload">REPLACE FILE</button></div>
     ${u.fix.length?`<div class="alert error" style="align-items:center">${I('err')}<div>${plural(u.fix.length,'row')} ${u.fix.length===1?'needs':'need'} attention</div></div>`:''}
-    <div class="alert info">${I('info')}<div>${u.unchanged} teachers in your file already match the current list, so nothing changes for them.<br>New teachers start as “Not in a group”. They get a WhatsApp invite once they’re in a group${L()?'':' and the program is launched'}.</div></div>
+    <div class="alert info">${I('info')}<div>${u.unchanged} matching teachers won’t be changed.<br>New teachers won’t get a WhatsApp invite until assigned to a group.</div></div>
     ${u.fix.length?`<div><h2 class="h5" style="margin-bottom:8px">Needs attention</h2><table>${head}<tbody>${u.fix.map(p=>row(p,'fix')).join('')}</tbody></table></div>`:''}
     <div><h2 class="h5" style="margin-bottom:8px">New trainers (${tr.length})</h2><table>${head}<tbody>${tr.map(p=>row(p,'add')).join('')||'<tr><td colspan="5" class="ann">None</td></tr>'}</tbody></table></div>
     <div><h2 class="h5" style="margin-bottom:8px">New teachers (${te.length})</h2><table>${head}<tbody>${te.map(p=>row(p,'add')).join('')}</tbody></table></div>
     <div><h2 class="h5" style="margin-bottom:8px">Updates (${u.upd.length})</h2><table>${head}<tbody>${updRows}</tbody></table></div></div>`,
-   {left:'Check what we found in your file. Edit anyone whose details need fixing before adding them to the program.',buttons:`<button class="btn primary" data-act="applyUpload">ADD ${nAdd} USERS</button>`});
+   {buttons:`<button class="btn primary" data-act="applyUpload">ADD ${nAdd} USERS</button>`});
 }
 
 /* ---------------- library + settings ---------------- */
