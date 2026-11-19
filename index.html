@@ -1359,9 +1359,9 @@ function startUpload(){S.ad.up={state:'empty'};S.screen='upload';window.scrollTo
 function buildUploadReview(){const a=AD();const ex=a.teachers.filter(t=>t.group).slice(0,3);
   const mk=(name,phone,district,school,subjects,role='teacher')=>({uid:nid('u'),name,phone,district,school,subjects,role});
   return {state:'review',file:'busia_new_teachers.csv',
-    fix:[{...mk('Moses Wanyama','','Busia','Nkoma Secondary School','Physics'),err:{phone:'Phone number missing'}},{...mk('Esther Nabwire','+256 772 ••• 191','Busiaa','Busia Secondary School','Maths'),err:{district:'Not recognised'}}],
-    add:[mk('Rose Achieng','+256 772 ••• 207','Busia','Busia Secondary School','','trainer'),
-      ...[['Moureen Nafula','Nkoma Secondary School','Biology'],['Joseph Ekesa','Kamuge High School','Chemistry'],['Sarah Atieno','Busia Secondary School','Maths'],['Paul Barasa','Nkoma Secondary School','Physics'],['Agnes Nekesa','Kamuge High School','Biology, Chemistry'],['Tom Wandera','Busia Secondary School','Maths'],['Lucy Adhiambo','Nkoma Secondary School','Biology'],['Ivan Mugeni','Kamuge High School','Physics'],['Olive Nasimiyu','Busia Secondary School','Chemistry'],['Henry Ouma','Nkoma Secondary School','Maths'],['Faith Akinyi','Kamuge High School','Biology']].map(([n,s,sub],i)=>mk(n,'+256 772 ••• '+(180+i),'Busia',s,sub))],
+    fix:[{...mk('Moses Wanyama','','Busia','Nkoma Secondary School','Physics'),err:{phone:'Phone number missing'}},{...mk('Esther Nabwire','+256 772 ••• 491','Busiaa','Busia Secondary School','Maths'),err:{district:'Not recognised'}}],
+    add:[mk('Rose Achieng','+256 772 ••• 407','Busia','Busia Secondary School','','trainer'),
+      ...[['Moureen Nafula','Nkoma Secondary School','Biology'],['Joseph Ekesa','Kamuge High School','Chemistry'],['Sarah Atieno','Busia Secondary School','Maths'],['Paul Barasa','Nkoma Secondary School','Physics'],['Agnes Nekesa','Kamuge High School','Biology, Chemistry'],['Tom Wandera','Busia Secondary School','Maths'],['Lucy Adhiambo','Nkoma Secondary School','Biology'],['Ivan Mugeni','Kamuge High School','Physics'],['Olive Nasimiyu','Busia Secondary School','Chemistry'],['Henry Ouma','Nkoma Secondary School','Maths'],['Faith Akinyi','Kamuge High School','Biology']].map(([n,s,sub],i)=>mk(n,'+256 772 ••• '+(480+i),'Busia',s,sub))],
     upd:ex.map((t,i)=>({id:t.id,name:t.name,phone:t.phone,district:t.district,school:t.school,subjects:t.subjects,change:i===1?{field:'phone',was:t.phone,now:t.phone.replace(/\d+$/,'225')}:{field:'school',was:t.school,now:SCH[t.district].find(x=>x!==t.school)||t.school}})),
     unchanged:a.teachers.length-3};
 }
@@ -1379,23 +1379,23 @@ function scrUpload(){
       {buttons:`<button class="btn primary" disabled>ADD USERS</button>`});
   }
   const head='<colgroup><col style="width:28%"><col style="width:16%"><col style="width:30%"><col><col style="width:48px"></colgroup><thead><tr><th>Name</th><th>District</th><th>School</th><th>Subjects</th><th></th></tr></thead>';
-  const row=(p,ctx)=>`<tr class="${ctx==='fix'?'uprow-fix':''}"><td><div>${esc(p.name)}</div><div class="cap ${p.err?.phone?'badtext':''}" style="${p.err?.phone?'color:var(--error);font-weight:600':''}">${esc(p.err?.phone||p.phone)}</div></td>
+  const row=(p,ctx)=>`<tr><td><div>${esc(p.name)}</div><div class="cap ${p.err?.phone?'badtext':''}" style="${p.err?.phone?'color:var(--error);font-weight:600':''}">${esc(p.err?.phone||p.phone)}</div></td>
      <td>${p.err?.district?`<span class="badtext">${esc(p.district)}</span><div class="cap" style="color:var(--error)">${p.err.district}</div>`:esc(p.district)}</td><td>${esc(p.school||'—')}</td><td>${esc(p.subjects||'—')}</td>
      <td><button class="iconbtn" title="Edit ${esc(p.name)}" data-act="editUpRow" data-uid="${p.uid}" data-ctx="${ctx}">${I('edit','sm')}</button></td></tr>`;
   const tr=u.add.filter(p=>p.role==='trainer'),te=u.add.filter(p=>p.role==='teacher');
   const updRows=u.upd.map(p=>`<tr><td><div>${esc(p.name)}</div><div class="cap">${p.change.field==='phone'?`<b style="color:#000">${esc(p.change.now)}</b><br>Was ${esc(p.change.was)}`:esc(p.phone)}</div></td><td>${esc(p.district)}</td>
      <td>${p.change.field==='school'?`<b>${esc(p.change.now)}</b><div class="cap">Was ${esc(p.change.was)}</div>`:esc(p.school)}</td><td>${esc(p.subjects)}</td><td></td></tr>`).join('');
   const nAdd=u.add.length+u.upd.length;
-  return fullShell('Upload users',`<div class="page narrow stack"><div><h1 class="h3">Upload users</h1><p class="ann">Check what we found in your file. Edit anyone whose details need fixing before adding them to the program.</p></div>
-    <div class="filechip" style="border:1px solid var(--fine);border-radius:4px">${I('doc')}<div style="flex:1"><div>${u.file}</div><div class="cap">${u.add.length} new people, ${u.upd.length} updates, ${u.unchanged} unchanged${u.fix.length?`, ${u.fix.length} need fixing`:''}</div></div><button class="btn flat" data-act="doUpload">REPLACE FILE</button></div>
-    ${u.fix.length?`<div class="alert warning">${I('warn')}<div>${plural(u.fix.length,'row')} ${u.fix.length===1?'needs':'need'} fixing. Edit ${u.fix.length===1?'it':'them'} below, or ${u.fix.length===1?'it':'they'} won’t be added.</div></div>
-      <div><h2 class="h5" style="margin-bottom:8px">Needs fixing (${u.fix.length})</h2><table>${head}<tbody>${u.fix.map(p=>row(p,'fix')).join('')}</tbody></table></div>`:`<div class="alert success">${I('ok')}<div>Everything in the file is ready to add.</div></div>`}
+  const summary=`${u.add.length} new · ${u.upd.length} updates · ${u.unchanged} unchanged${u.fix.length?` · ${u.fix.length} need fixing`:''}`;
+  return fullShell('Upload users',`<div class="page narrow stack"><div><h1 class="h3">Upload users</h1><p class="ann">${summary}</p></div>
+    <div class="filechip" style="border:1px solid var(--fine);border-radius:4px">${I('doc')}<div style="flex:1">${u.file}</div><button class="btn flat" data-act="doUpload">REPLACE FILE</button></div>
+    ${u.fix.length?`<div class="alert error" style="align-items:center">${I('err')}<div>${plural(u.fix.length,'row')} ${u.fix.length===1?'needs':'need'} attention</div></div>`:''}
+    <div class="alert info">${I('info')}<div>${u.unchanged} teachers in your file already match the current list, so nothing changes for them.<br>New teachers start as “Not in a group”. They get a WhatsApp invite once they’re in a group${L()?'':' and the program is launched'}.</div></div>
+    ${u.fix.length?`<div><h2 class="h5" style="margin-bottom:8px">Needs attention</h2><table>${head}<tbody>${u.fix.map(p=>row(p,'fix')).join('')}</tbody></table></div>`:''}
     <div><h2 class="h5" style="margin-bottom:8px">New trainers (${tr.length})</h2><table>${head}<tbody>${tr.map(p=>row(p,'add')).join('')||'<tr><td colspan="5" class="ann">None</td></tr>'}</tbody></table></div>
     <div><h2 class="h5" style="margin-bottom:8px">New teachers (${te.length})</h2><table>${head}<tbody>${te.map(p=>row(p,'add')).join('')}</tbody></table></div>
-    <div><h2 class="h5" style="margin-bottom:8px">Updates (${u.upd.length})</h2><table>${head}<tbody>${updRows}</tbody></table></div>
-    <div class="note">${I('info','sm')}<span>${u.unchanged} teachers in your file already match the current list, so nothing changes for them.</span></div>
-    <div class="note">${I('info','sm')}<span>New teachers start as “Not in a group”. They get a WhatsApp invite once they’re in a group${L()?'':' and the program is launched'}.</span></div></div>`,
-   {left:`${u.add.length} new · ${u.upd.length} updates · ${u.unchanged} unchanged${u.fix.length?` · ${u.fix.length} need fixing`:''}`,buttons:`<button class="btn primary" data-act="applyUpload">ADD ${nAdd} USERS</button>`});
+    <div><h2 class="h5" style="margin-bottom:8px">Updates (${u.upd.length})</h2><table>${head}<tbody>${updRows}</tbody></table></div></div>`,
+   {left:'Check what we found in your file. Edit anyone whose details need fixing before adding them to the program.',buttons:`<button class="btn primary" data-act="applyUpload">ADD ${nAdd} USERS</button>`});
 }
 
 /* ---------------- library + settings ---------------- */
