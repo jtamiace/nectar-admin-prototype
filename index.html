@@ -1419,9 +1419,6 @@ function scrSettings(){
     ${field('s-name','Program name',p.name,{model:'ad.set.name',err:a.setErr})}
     ${field('s-partner','Organization name',p.partner,{model:'ad.set.partner'})}
     <div>${selectField('s-lang','Language',p.language,['English','Luganda','Ateso','Swahili'].map(v=>({v,t:v})),{model:'ad.set.language'})}<div class="help">Used for bot messages and templates</div></div>
-    <div><h2 class="h5" style="margin-bottom:12px">Reference documents</h2>
-      <div class="drop"><div>Drag files here, or</div><button class="btn secondary" data-act="sAddDoc" ${p.docs.length>=SAMPLE_DOCS.length?'disabled':''}>CHOOSE FILES</button><div class="cap">PDF or Word documents</div></div>
-      ${docs?`<div style="margin-top:12px">${docs}</div>`:''}</div>
     <div class="row"><span class="spacer"></span><button class="btn primary" data-act="sSave">SAVE CHANGES</button></div></div></div>
    <div class="apage" style="max-width:960px"><div class="row"><h2 class="h5" style="flex:1">Delete program</h2><button class="btn flat danger" data-act="askDelProg">DELETE PROGRAM</button></div></div>`);
 }
