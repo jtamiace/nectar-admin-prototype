@@ -955,7 +955,9 @@ function seedAdmin(){
   return {launched:true,tab:'home',sort:{},menu:null,q:{},f:{},week:0,cal:false,calMonth:0,range:'7',
     trainers,groups,teachers,templates:seedTemplates(),files:seedFiles(),bannerU:true,bannerG:true,sel:new Set(),gtab:'conv',group:null,shown:25};
 }
-function seedFromWizard(){const a=seedAdmin();a.launched=false;
+const AUTO_PREGEN=['invite','joinrem','reflect','privacy','ontopic','quiet','nudge','across','digest'];
+function seedFromWizard(){const a=seedAdmin();a.launched=false;a.emptySched=true;
+  a.templates=a.templates.filter(t=>AUTO_PREGEN.includes(t.id)).map(t=>({...t,status:t.id==='invite'?'approved':'pending',created:'18 Jan 2027',sched:null,reason:null}));
   if(S.groups.length&&S.teachers.length){
     a.trainers=S.trainers.map(t=>({id:t.id,name:t.name,district:t.district,phone:t.phone,role:'trainer',school:t.school||'',subjects:t.subjects||'',wa:'joined',last:null}));
     a.groups=S.groups.map(g=>({id:g.id,name:g.name,district:members(g.id)[0]?.district||'',trainer:g.trainer||null,last:null}));
@@ -1017,7 +1019,17 @@ function fullShell(title,inner,{left='',buttons=''}={}){
 function aGo(tab,extra={}){S.ad.tab=tab;S.ad.menu=null;Object.assign(S.ad,extra);S.screen='admin';S.menuOpen=false;window.scrollTo(0,0);render()}
 
 /* ---------------- schedule data ---------------- */
+function userItems(off){
+  const mon=addDays(START,off*7);const out=[];
+  for(const t of S.ad.templates){if(!t.userMade||!t.date||t.status==='draft')continue;const d0=new Date(t.date.replace(/^\w+ /,''));
+    for(let i=0;i<7;i++){const d=addDays(mon,i);const diff=Math.round((d-d0)/864e5);
+      const hit=diff===0||(diff>0&&t.repeat==='Weekly'&&diff%7===0)||(diff>0&&t.repeat==='Every 2 weeks'&&diff%14===0);
+      if(hit)out.push({day:i,time:t.time,title:t.name,desc:tokText(t.body),type:t.type,author:t.author,rec:t.recText||'',to:t.recText||'',status:t.status,tpl:t.id})}}
+  return out.sort((x,y)=>x.day-y.day||x.time.localeCompare(y.time));
+}
+const hasScheduled=()=>S.ad.templates.some(t=>t.userMade&&t.date&&t.status!=='draft');
 function weekItems(off){
+  if(S.ad.emptySched) return userItems(off);
   if(off<0) return [];
   const wk=off+1;
   if(off===0) return [
@@ -1099,7 +1111,7 @@ function scrHome(){
 function scrSchedule(){
   const a=AD();const sub=a.stab||'cal';
   let body;
-  if(sub==='cal') body=`${weekNav()}${weekTable(a.week)}`;
+  if(sub==='cal') body=a.emptySched&&!hasScheduled()?`<div class="empty" style="padding:56px 0">${I('clock')}<div class="h5">Nothing scheduled yet</div><button class="btn primary" data-act="newTpl">NEW TEMPLATE</button></div>`:`${weekNav()}${weekTable(a.week)}`;
   else body=templatesTable();
   return ashell('schedule',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Schedule</h1><button class="btn primary" data-act="newTpl">NEW TEMPLATE</button></div>
     <div class="subtabs"><button class="subtab ${sub==='cal'?'on':''}" data-act="stab" data-s="cal">Calendar</button><button class="subtab ${sub==='tpl'?'on':''}" data-act="stab" data-s="tpl">Templates</button></div>${body}</div>`);
@@ -1296,10 +1308,13 @@ function scrGroup(){
       <div class="stat"><div class="cap">Teachers who posted</div><div style="font-weight:600">${posted.length} of ${m.length}</div>${notPosted.length&&L()?`<div class="cap">${esc(andList(notPosted.slice(0,3)))}${notPosted.length>3?' and others':''} haven’t posted yet</div>`:''}</div>
       <div class="stat"><div class="cap">Last activity</div><div style="font-weight:600">${L()?rel(g.last):'—'}</div></div>
       <hr style="border:0;border-top:1px solid var(--fine);margin:16px 0">
-      <div class="h5">Next from Nectar</div><div class="cap" style="margin-top:10px">Weekly prompt</div><div style="font-weight:600">Monday 25 Jan · 08:00 EAT</div><div class="cap">Prompt · Kenneth Oroma</div>
+      <div class="h5">Next from Nectar</div>${a.emptySched?(()=>{let nx=null;for(let w=0;w<20&&!nx;w++){nx=userItems(w)[0];if(nx)nx.w=w}
+        if(!nx)return `<div class="ann" style="margin-top:8px">Nothing scheduled yet</div>`;const d=addDays(START,nx.w*7+nx.day);
+        return `<div class="cap" style="margin-top:10px">${esc(nx.title)}</div><div style="font-weight:600">${DAYS[d.getDay()]} ${fmtD(d)} · ${nx.time} EAT</div><div class="cap">${nx.type} · ${esc(nx.author)}</div><div style="margin:6px 0 10px">${chip(nx.status)}</div>
+        <div class="botmsg" style="font-size:14px">${esc(nx.desc)}</div><button class="btn flat" style="margin-top:8px;padding:0 4px" data-act="openTpl" data-id="${nx.tpl}">EDIT MESSAGE</button>`})():`<div class="cap" style="margin-top:10px">Weekly prompt</div><div style="font-weight:600">Monday 25 Jan · 08:00 EAT</div><div class="cap">Prompt · Kenneth Oroma</div>
       <div style="margin:6px 0 10px">${chip('approved')}</div>
       <div class="botmsg" style="font-size:14px">Hi ${esc(g.name)}! This week’s question: what is one thing you tried this week because of something a colleague shared? Share it here, or reply REFLECT to think it through privately.</div>
-      <button class="btn flat" style="margin-top:8px;padding:0 4px" data-act="openTpl" data-id="weekly">EDIT MESSAGE</button></div>`;
+      <button class="btn flat" style="margin-top:8px;padding:0 4px" data-act="openTpl" data-id="weekly">EDIT MESSAGE</button>`}</div>`;
     body=`<div class="convwrap"><div><div class="filter" style="margin-bottom:12px">${I('search','sm')}<input id="q-conv" placeholder="Search this conversation" value="${esc(a.q.conv||'')}" data-model="ad.q.conv" data-live="1"></div>
       <div class="cap" style="background:var(--blue50);padding:8px 12px;border-radius:4px;margin-bottom:8px">Members agreed when joining that program staff can read this group. Only admins and the group’s trainer can see this page.</div>${msgHtml}</div>${side}</div>`;
   } else if(tab==='members'){
@@ -1645,10 +1660,10 @@ function saveTpl(status){
   }
   if(Object.keys(err).length){S.ad.edErr=err;render();document.querySelector('.errtext')?.scrollIntoView({block:'center'});return}
   const sched=e.kind==='Automatic'||e.trigger?null:`${e.date.replace(/ 2027$/,'')} · ${e.time} EAT`;
-  if(e.isNew){a.templates.push({id:nid('tp'),name:e.name.trim()||'Untitled template',desc:tokText(e.body).slice(0,60),type:e.kind,author:'Kenneth Oroma',rec:toGroups(e)?'Groups':'Trainers',recMode:e.recMode,recDistrict:e.recDistrict,recGroups:e.recGroups,recTrainers:e.recTrainers,freq:e.kind==='Announcement'||e.repeat==='Does not repeat'?'Once':e.repeat==='Weekly'?'Every '+e.date.split(' ')[0].replace('Mon','Monday').replace('Fri','Friday'):e.repeat,sched,created:'21 Jan 2027',status,header:e.header,body:e.body,footer:e.footer,date:e.date,time:e.time,repeat:e.repeat})}
+  if(e.isNew){a.templates.push({userMade:true,recText:recSummary(e).label,id:nid('tp'),name:e.name.trim()||'Untitled template',desc:tokText(e.body).slice(0,60),type:e.kind,author:'Kenneth Oroma',rec:toGroups(e)?'Groups':'Trainers',recMode:e.recMode,recDistrict:e.recDistrict,recGroups:e.recGroups,recTrainers:e.recTrainers,freq:e.kind==='Announcement'||e.repeat==='Does not repeat'?'Once':e.repeat==='Weekly'?'Every '+e.date.split(' ')[0].replace('Mon','Monday').replace('Fri','Friday'):e.repeat,sched,created:'21 Jan 2027',status,header:e.header,body:e.body,footer:e.footer,date:e.date,time:e.time,repeat:e.repeat})}
   else{const t=a.templates.find(x=>x.id===e.id);Object.assign(t,{status:t.status==='approved'&&status==='draft'?'approved':status,header:e.header,body:e.body,footer:e.footer,media:e.headerType==='media'?e.media:null});if(e.id==='review')S.ad.tplStatus={review:t.status};if(status==='pending'&&e.id==='checkin')S.ad.checkinStatus='pending'}
   snack(status==='pending'?'Submitted to Meta for review. This usually takes up to 24 hours.':'Draft saved');
-  S.screen='admin';S.ad.tab='schedule';if(e.isNew)S.ad.stab='tpl';S.ad.ed=null;window.scrollTo(0,0);render();
+  S.screen='admin';S.ad.tab='schedule';if(e.isNew){if(a.emptySched&&status==='pending'&&e.date){S.ad.stab='cal';S.ad.week=Math.floor((new Date(e.date.replace(/^\w+ /,''))-START)/864e5/7)}else S.ad.stab='tpl'}S.ad.ed=null;window.scrollTo(0,0);render();
 }
 Object.assign(CH,{
   edKind(el){S.ad.ed.kind=el.value;if(el.value==='Prompt'&&!toGroups(S.ad.ed))S.ad.ed.recMode='allGroups';if(el.value==='Announcement'){S.ad.ed.repeat='Does not repeat'}else{S.ad.ed.repeat='Weekly'}render()},
