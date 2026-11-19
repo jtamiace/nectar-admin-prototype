@@ -1389,9 +1389,8 @@ function scrUpload(){
   const summary=`${u.add.length} new · ${u.upd.length} updates · ${u.unchanged} unchanged${u.fix.length?` · ${u.fix.length} need fixing`:''}`;
   return fullShell('Upload users',`<div class="page narrow stack"><div><h1 class="h3">Upload users</h1><p class="ann">${summary}</p></div>
     <div class="filechip" style="border:1px solid var(--fine);border-radius:4px">${I('doc')}<div style="flex:1">${u.file}</div><button class="btn flat" data-act="doUpload">REPLACE FILE</button></div>
-    ${u.fix.length?`<div class="alert error" style="align-items:center">${I('err')}<div>${plural(u.fix.length,'row')} ${u.fix.length===1?'needs':'need'} attention</div></div>`:''}
-    <div class="alert info">${I('info')}<div>${u.unchanged} matching teachers won’t be changed.<br>New teachers won’t get a WhatsApp invite until assigned to a group.</div></div>
-    ${u.fix.length?`<div><h2 class="h5" style="margin-bottom:8px">Needs attention</h2><table>${head}<tbody>${u.fix.map(p=>row(p,'fix')).join('')}</tbody></table></div>`:''}
+    <div class="alert info">${I('info')}<div>${u.unchanged} existing teachers unchanged<br>New teachers won’t get a WhatsApp invite until assigned to a group.</div></div>
+    ${u.fix.length?`<div><h2 class="h5 row" style="margin-bottom:8px;gap:6px"><span style="color:var(--error);display:inline-flex">${I('err','sm')}</span>${u.fix.length} need${u.fix.length===1?'s':''} attention</h2><table>${head}<tbody>${u.fix.map(p=>row(p,'fix')).join('')}</tbody></table></div>`:''}
     <div><h2 class="h5" style="margin-bottom:8px">New trainers (${tr.length})</h2><table>${head}<tbody>${tr.map(p=>row(p,'add')).join('')||'<tr><td colspan="5" class="ann">None</td></tr>'}</tbody></table></div>
     <div><h2 class="h5" style="margin-bottom:8px">New teachers (${te.length})</h2><table>${head}<tbody>${te.map(p=>row(p,'add')).join('')}</tbody></table></div>
     <div><h2 class="h5" style="margin-bottom:8px">Updates (${u.upd.length})</h2><table>${head}<tbody>${updRows}</tbody></table></div></div>`,
