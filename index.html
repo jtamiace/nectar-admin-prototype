@@ -303,6 +303,7 @@ table.sect{scroll-margin-top:124px}
 .ahead .tip[data-tip]:hover::after{left:auto;right:0}
 .tip.tipw[data-tip]:hover::after,.tip.tipw[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:-8px;bottom:calc(100% + 6px);background:#333;color:#fff;font-size:12px;padding:6px 10px;border-radius:3px;white-space:normal;width:300px;z-index:30;line-height:1.4}
 .tip[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:0;pointer-events:none;bottom:calc(100% + 4px);background:#333;color:#fff;font-size:12px;padding:3px 8px;border-radius:3px;white-space:nowrap;z-index:30}
+.draghandle{cursor:grab;display:inline-flex;color:#757575;margin-left:-4px}.draghandle:active{cursor:grabbing}.pweek.dragging{opacity:.4}.pweek.dropb{box-shadow:inset 0 2px 0 #4368f5}.pweek.dropa{box-shadow:inset 0 -2px 0 #4368f5}.iconbtn:disabled{opacity:.35;cursor:default}
 </style>
 </head>
 <body>
@@ -868,6 +869,8 @@ const CH={
   setTrainer(el){const g=S.groups.find(x=>'tr-'+x.id===el.id);g.trainer=el.value||null;g.trainerAuto=false;render()},
   showNames(el){S.showNames=el.checked;render()},
   autoDistrict(el){S.autoByDistrict=el.checked;render()},
+  planRepeat(el){S.ad.pe.repeat=el.checked;render()},
+  planEnd(el){S.ad.pe.endMode=el.value;if(el.value==='date'&&!S.ad.pe.end){const L=Math.max(1,S.ad.pe.weeks.length);S.ad.pe.end=fmtFull(addDays(START,(L*3-1)*7+PDAYS.indexOf(S.ad.pe.day)))}render()},
   editRole(el){S.edit.role=el.value;render()}
 };
 function setPath(path,val){const k=path.split('.');let o=S;for(let i=0;i<k.length-1;i++)o=o[k[i]];o[k.at(-1)]=val}
@@ -908,7 +911,7 @@ Object.assign(P,{
  arrowL:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',arrowR:'M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z',
  calendar:'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7z',
  refresh:'M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
- chevL:'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', chevR:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
+ chevL:'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', chevR:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z', chevU:'M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z', chevD:'M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z', drag:'M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
  person:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'
 });
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -965,7 +968,7 @@ function seedAdmin(){
 const AUTO_PREGEN=['invite','joinrem','reflect','privacy','ontopic','quiet','nudge','across','digest','weekly'];
 const PROMPT_POOL=['Think of a moment this week when a learner surprised you. What did they do, and what did you do next?','What is one thing you tried this week because of something a colleague shared?','Share one way you checked that learners understood a new idea this week.','Describe a question a learner asked that made you think.','What small change made a lesson run more smoothly this week?','When did learners help each other well this week? What made it work?','Which everyday object helped you explain an idea in class?','What is one thing you would keep doing from this week’s lessons?'];
 function seedFromWizard(){const a=seedAdmin();a.launched=false;a.emptySched=true;
-  a.plan={day:'Monday',time:'08:00',tz:'Africa/Kampala',rec:'all',weeks:[1,2,3,4].map(n=>({n,q:PROMPT_POOL[n-1],src:'nectar',status:'draft'}))};
+  a.plan={day:'Monday',time:'08:00',tz:'Africa/Kampala',rec:'all',repeat:false,endMode:'never',end:'',weeks:[1,2,3,4].map(n=>({n,q:PROMPT_POOL[n-1],src:'nectar',status:'draft'}))};
   a.templates=a.templates.filter(t=>AUTO_PREGEN.includes(t.id)).map(t=>({...t,author:t.id==='weekly'?'Nectar':t.author,type:t.id==='weekly'?'Prompt':t.type,freq:t.id==='weekly'?'Every week':t.freq,status:['invite','weekly'].includes(t.id)?'approved':'pending',created:'18 Jan 2027',sched:null,reason:null}));
   if(S.groups.length&&S.teachers.length){
     a.trainers=S.trainers.map(t=>({id:t.id,name:t.name,district:t.district,phone:t.phone,role:'trainer',school:t.school||'',subjects:t.subjects||'',wa:'joined',last:null}));
@@ -1034,7 +1037,7 @@ function userItems(off){
     for(let i=0;i<7;i++){const d=addDays(mon,i);const diff=Math.round((d-d0)/864e5);
       const hit=diff===0||(diff>0&&t.repeat==='Weekly'&&diff%7===0)||(diff>0&&t.repeat==='Every 2 weeks'&&diff%14===0);
       if(hit)out.push({tz:tzAbbr(t.tz),day:i,time:t.time,title:t.name,desc:tokText(t.body),type:t.type,author:t.author,rec:t.recText||'',to:t.recText||'',status:t.status,tpl:t.id})}}
-  const pl=S.ad.plan;if(pl){const di=PDAYS.indexOf(pl.day);for(const w of pl.weeks)if(w.status==='scheduled'&&w.n-1===off)out.push({tz:tzAbbr(pl.tz),day:di,time:pl.time,title:'Weekly prompt',desc:`Week ${w.n} · ${w.q}`,type:'Prompt',author:w.src==='nectar'?'Nectar':'Admin',rec:planRecLabel(pl),to:planRecLabel(pl),status:'scheduled',tpl:'plan',q:w.q})}
+  const pl=S.ad.plan;if(pl&&pl.weeks.length&&off>=0){const di=PDAYS.indexOf(pl.day);const L=pl.weeks.length;const endD=pl.repeat&&pl.endMode==='date'&&pl.end?parseD(pl.end):null;const when=addDays(START,off*7+di);const w=off<L?pl.weeks[off]:pl.repeat&&(!endD||when<=endD)?pl.weeks[off%L]:null;if(w&&w.status==='scheduled')out.push({tz:tzAbbr(pl.tz),day:di,time:pl.time,title:'Weekly prompt',desc:`Prompt ${pl.weeks.indexOf(w)+1} · ${w.q}`,type:'Prompt',author:w.src==='nectar'?'Nectar':'Admin',rec:planRecLabel(pl),to:planRecLabel(pl),status:'scheduled',tpl:'plan',q:w.q})}
   return out.sort((x,y)=>x.day-y.day||x.time.localeCompare(y.time));
 }
 const PDAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];const ALLDAYS=PDAYS;
@@ -1054,7 +1057,7 @@ function weekItems(off){
    {day:6,time:'18:00',title:'Weekly check-in',desc:'Week 1 · Reply with one word that describes your teaching this week, and one thing you want to try next week.',type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:'paused',tpl:'checkin'}];
   const qs=['What is one thing you tried this week because of something a colleague shared?','Describe a question a learner asked that made you think.','What did you change in a lesson after it didn’t go as planned?','Share one way you checked understanding this week.'];
   return [
-   {day:0,time:'08:00',title:'Weekly prompt',desc:`Week ${wk} · ${qs[(wk-2)%qs.length]}`,type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:'approved',tpl:'weekly'},
+   {day:0,time:'08:00',title:'Weekly prompt',desc:`Prompt ${wk} · ${qs[(wk-2)%qs.length]}`,type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:'approved',tpl:'weekly'},
    ...(wk%2===1?[{day:2,time:'16:00',title:'Across the circles',desc:'Shared summary, generated from this week’s group discussions. Themes only, no names.',type:'Automatic',author:'Nectar',rec:'18 groups',to:'All groups',status:'approved',tpl:'across'}]:[]),
    {day:3,time:'17:00',title:'Weekly digest',desc:`Hi Ruth Okot, here’s the digest for your circles. (PDF attached)`,type:'Automatic',author:'Nectar',rec:'6 trainers',to:'Ruth Okot',status:'rejected',tpl:'digest'},
    {day:3,time:'17:00',title:'Prompt for review',desc:`Week ${wk+1} · ${qs[(wk-1)%qs.length]}`,type:'Prompt',author:'Kenneth Oroma',rec:'6 trainers',to:'Ruth Okot',status:'approved',tpl:'review',act:'EDIT PROMPT'},
@@ -1116,7 +1119,7 @@ function scrHome(){
     <div class="stats">${stats}</div></div>
    <div class="apage"><div class="ahead"><div style="flex:1"><h2 class="h4">This week</h2><div class="ann">Mon 18 – Sun 24 Jan</div></div><button class="btn secondary" data-act="atab" data-tab="schedule">VIEW FULL SCHEDULE</button></div>
     ${rows?`<table class="atable" style="margin-top:16px"><colgroup><col style="width:130px"><col><col style="width:120px"><col style="width:130px"><col style="width:120px"></colgroup><thead><tr><th>Time</th><th>Message</th><th>Recipients</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
-      :a.emptySched&&!hasScheduled()&&a.plan?.weeks.length?`<div class="empty" style="padding:40px 0"><div class="h5">Nothing scheduled yet</div><div class="ann">Nectar drafted prompts for your first ${plural(a.plan.weeks.length,'week')}.</div><button class="btn primary" data-act="openPlan">REVIEW PROMPTS</button></div>`
+      :a.emptySched&&!hasScheduled()&&a.plan?.weeks.length?`<div class="empty" style="padding:40px 0"><div class="h5">Nothing scheduled yet</div><div class="ann">Nectar drafted ${plural(a.plan.weeks.length,'prompt')}.</div><button class="btn primary" data-act="openPlan">REVIEW PROMPTS</button></div>`
       :`<div class="empty" style="padding:40px 0"><div class="h5">Nothing scheduled this week</div>${L()?'':'<div class="ann">Messages start going out once you launch the program.</div>'}</div>`}</div>`);
 }
 
@@ -1124,7 +1127,7 @@ function scrHome(){
 function scrSchedule(){
   const a=AD();const sub=a.stab||'cal';
   let body;
-  if(sub==='cal') body=a.emptySched&&!hasScheduled()?`<div class="empty" style="padding:56px 0">${I('clock')}<div class="h5">Nothing scheduled yet</div>${a.plan?.weeks.length?`<div class="ann">Nectar drafted prompts for your first ${plural(a.plan.weeks.length,'week')}.</div>`:''}<div class="row" style="gap:12px;margin-top:4px">${a.plan?'<button class="btn primary" data-act="openPlan">REVIEW PROMPTS</button><button class="btn secondary" data-act="newTpl">NEW TEMPLATE</button>':'<button class="btn primary" data-act="newTpl">NEW TEMPLATE</button>'}</div></div>`:`${weekNav()}${weekTable(a.week)}`;
+  if(sub==='cal') body=a.emptySched&&!hasScheduled()?`<div class="empty" style="padding:56px 0">${I('clock')}<div class="h5">Nothing scheduled yet</div>${a.plan?.weeks.length?`<div class="ann">Nectar drafted ${plural(a.plan.weeks.length,'prompt')}.</div>`:''}<div class="row" style="gap:12px;margin-top:4px">${a.plan?'<button class="btn primary" data-act="openPlan">REVIEW PROMPTS</button><button class="btn secondary" data-act="newTpl">NEW TEMPLATE</button>':'<button class="btn primary" data-act="newTpl">NEW TEMPLATE</button>'}</div></div>`:`${weekNav()}${weekTable(a.week)}`;
   else body=templatesTable();
   return ashell('schedule',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Schedule</h1><button class="btn primary" data-act="newTpl">NEW TEMPLATE</button></div>
     <div class="subtabs"><button class="subtab ${sub==='cal'?'on':''}" data-act="stab" data-s="cal">Calendar</button><button class="subtab ${sub==='tpl'?'on':''}" data-act="stab" data-s="tpl">Templates</button></div>${body}</div>`);
@@ -1171,15 +1174,21 @@ Object.assign(A,{
 document.addEventListener('click',e=>{if(S.ad&&S.ad.dp&&!e.target.closest('.dpwrap')){S.ad.dp=null;if(!e.target.closest('[data-act]'))render()}},true);
 
 /* ---------------- weekly prompts plan ---------------- */
+document.addEventListener('dragstart',e=>{const h=e.target.closest&&e.target.closest('.draghandle');if(!h||!S.ad?.pe)return;S.ad.pdrag=+h.dataset.pi;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',h.dataset.pi);const row=h.closest('.pweek');if(row){e.dataTransfer.setDragImage(row,20,20);setTimeout(()=>row.classList.add('dragging'),0)}});
+document.addEventListener('dragover',e=>{const row=e.target.closest&&e.target.closest('.pweek');if(row&&S.ad?.pdrag!=null){e.preventDefault();document.querySelectorAll('.pweek.dropb,.pweek.dropa').forEach(x=>x.classList.remove('dropb','dropa'));const r=row.getBoundingClientRect();row.classList.add(e.clientY<r.top+r.height/2?'dropb':'dropa')}});
+document.addEventListener('drop',e=>{const row=e.target.closest&&e.target.closest('.pweek');if(!row||S.ad?.pdrag==null)return;e.preventDefault();const from=S.ad.pdrag;let to=+row.dataset.pi;const r=row.getBoundingClientRect();if(e.clientY>=r.top+r.height/2)to++;if(to>from)to--;S.ad.pdrag=null;if(to!==from)planReorder(S.ad.pe,from,to);render()});
+document.addEventListener('dragend',()=>{if(S.ad&&S.ad.pdrag!=null){S.ad.pdrag=null;render()}});
 function openPlan(){S.ad.pe=deep(S.ad.plan);S.ad.pe.sel=0;S.ad.peErr={};S.screen='plan';window.scrollTo(0,0);render()}
+function planRenum(pe){pe.weeks.forEach((w,i)=>w.n=i+1)}
+function planReorder(pe,i,j){const [w]=pe.weeks.splice(i,1);pe.weeks.splice(j,0,w);planRenum(pe);S.ad.peErr={};pe.sel=j}
 function planDate(pe,n){return addDays(START,(n-1)*7+PDAYS.indexOf(pe.day))}
 function planPreview(){const pe=S.ad.pe;const w=pe.weeks[pe.sel]||pe.weeks[0];const g=AD().groups[0]?.name||'Group 1';
   return `<div class="preview"><div class="bubble">Hi ${esc(g)}! This week’s question: ${w&&w.q?esc(w.q):'<span class="ann">…</span>'} Share a bright spot here, or reply REFLECT to think it through privately.</div></div>`}
 function scrPlan(){
   const pe=S.ad.pe,a=AD();const err=S.ad.peErr||{};
-  const rows=pe.weeks.map((w,i)=>{const d=planDate(pe,w.n);return `<div class="pweek" style="border-top:1px solid var(--fine);padding:16px 0">
-    <div class="row" style="gap:10px;margin-bottom:8px"><b>Week ${w.n}</b><span class="ann">${fmtDay(d)}</span>${w.src==='nectar'?'<span class="cap">Drafted by Nectar</span>':w.src==='edited'?'<span class="cap">Edited</span>':''}${chip(w.status==='scheduled'?'scheduled':'draft')}<span class="spacer"></span>
-      <button class="iconbtn" title="Draft another" data-act="planRedraft" data-i="${i}">${I('refresh','sm')}</button><button class="iconbtn" title="Remove week" data-act="planRm" data-i="${i}">${I('del','sm')}</button></div>
+  const N=pe.weeks.length;const rows=pe.weeks.map((w,i)=>{const d=planDate(pe,i+1);return `<div class="pweek" data-pi="${i}" style="padding:12px 0">
+    <div class="row" style="gap:10px;margin-bottom:8px"><span class="draghandle" draggable="true" data-pi="${i}" title="Drag to reorder">${I('drag','sm')}</span><b>Prompt ${i+1}</b><span class="ann">${fmtDay(d)}</span>${w.src==='nectar'?'<span class="cap">Drafted by Nectar</span>':w.src==='edited'?'<span class="cap">Edited</span>':''}${chip(w.status==='scheduled'?'scheduled':'draft')}<span class="spacer"></span>
+      <button class="iconbtn" title="Move up" aria-label="Move Prompt ${i+1} up" data-act="planMove" data-i="${i}" data-d="-1" ${i===0?'disabled':''}>${I('chevU','sm')}</button><button class="iconbtn" title="Move down" aria-label="Move Prompt ${i+1} down" data-act="planMove" data-i="${i}" data-d="1" ${i===N-1?'disabled':''}>${I('chevD','sm')}</button><button class="iconbtn" title="Draft another" data-act="planRedraft" data-i="${i}">${I('refresh','sm')}</button><button class="iconbtn" title="Remove prompt" data-act="planRm" data-i="${i}">${I('del','sm')}</button></div>
     <div class="field ${err[i]?'error':''}" style="padding-top:10px"><textarea id="pq-${i}" rows="2" data-model="ad.pe.weeks.${i}.q" data-pq="${i}" style="font:inherit;font-size:15px;border:0;background:transparent;width:100%;resize:vertical;outline:none">${esc(w.q)}</textarea></div>
     ${err[i]?`<div class="errtext">${err[i]}</div>`:''}</div>`}).join('');
   const recOpts=[{v:'all',t:`All groups (${a.groups.length})`},...DISTRICTS.filter(d=>a.groups.some(g=>g.district===d)).map(d=>({v:d,t:`${d} groups (${a.groups.filter(g=>g.district===d).length})`}))];
@@ -1187,23 +1196,28 @@ function scrPlan(){
     <h1 class="h3" style="font-size:24px">Weekly prompts</h1>
     <div class="tplgrid" style="margin-top:20px"><div>
       <div class="grid4">${selF('pl-day','Day',pe.day,PDAYS,'ad.pe.day')}${timeField('pl-time','Time',pe.time,'ad.pe.time')}${tzField('pl-tz',pe.tz||'Africa/Kampala','ad.pe.tz')}${selF('pl-rec','Recipients',pe.rec,recOpts,'ad.pe.rec')}</div>
-      <div style="margin-top:20px">${rows||'<div class="ann" style="padding:16px 0">No weeks planned</div>'}</div>
-      <div style="border-top:1px solid var(--fine);padding-top:8px"><button class="btn flat" data-act="planAdd">${I('add','sm')}ADD WEEK</button></div></div>
+      <div style="margin-top:20px">${rows||'<div class="ann" style="padding:16px 0">No prompts yet</div>'}</div>
+      <div style="padding-top:4px"><button class="btn flat" data-act="planAdd">${I('add','sm')}ADD PROMPT</button></div>
+      <div style="margin-top:24px"><label class="chk"><input type="checkbox" data-change="planRepeat" ${pe.repeat?'checked':''}> Repeat prompts</label>
+        <div class="cap" style="margin:2px 0 0 26px">${pe.repeat?`After Prompt ${N||1}, start again from Prompt 1.`:`Prompts stop after Prompt ${N||1}.`}</div>
+        ${pe.repeat?`<div style="margin:12px 0 0 26px"><div class="radios"><label class="chk"><input type="radio" name="plend" value="never" data-change="planEnd" ${pe.endMode!=='date'?'checked':''}> No end date</label><label class="chk"><input type="radio" name="plend" value="date" data-change="planEnd" ${pe.endMode==='date'?'checked':''}> End on a date</label></div>
+          ${pe.endMode==='date'?`<div style="max-width:240px;margin-top:12px">${dateField('pl-end','End date',pe.end,'ad.pe.end')}</div>`:''}</div>`:''}</div></div>
     <div style="position:sticky;top:80px"><div class="h5" style="margin-bottom:8px">Preview</div><div id="planpreview">${planPreview()}</div></div></div></div>`;
   return ashell('schedule',inner)+`<div class="bottombar"><span class="spacer"></span><button class="btn flat" style="color:#000" data-act="planCancel">CANCEL</button><button class="btn flat" style="color:#000" data-act="planSave">SAVE DRAFT</button><button class="btn primary" data-act="planSchedule" ${pe.weeks.length?'':'disabled'}>SCHEDULE PROMPTS</button></div><div style="height:72px"></div>`;
 }
 Object.assign(A,{
   openPlan(){openPlan()},
   planCancel(){S.ad.pe=null;S.screen='admin';S.ad.tab='schedule';render()},
-  planAdd(){const pe=S.ad.pe;const n=Math.max(0,...pe.weeks.map(w=>w.n))+1;pe.weeks.push({n,q:'',src:'admin',status:'draft'});pe.sel=pe.weeks.length-1;render();document.getElementById('pq-'+(pe.weeks.length-1))?.focus()},
-  planRm(el){const pe=S.ad.pe;const i=+el.dataset.i;const w=pe.weeks.splice(i,1)[0];pe.sel=0;snack(`Week ${w.n} removed`,()=>{pe.weeks.splice(i,0,w)});render()},
+  planAdd(){const pe=S.ad.pe;const n=pe.weeks.length+1;pe.weeks.push({n,q:'',src:'admin',status:'draft'});pe.sel=pe.weeks.length-1;render();document.getElementById('pq-'+(pe.weeks.length-1))?.focus()},
+  planRm(el){const pe=S.ad.pe;const i=+el.dataset.i;const w=pe.weeks.splice(i,1)[0];planRenum(pe);pe.sel=0;snack(`Prompt ${i+1} removed`,()=>{pe.weeks.splice(i,0,w);planRenum(pe)});render()},
+  planMove(el){const pe=S.ad.pe;const i=+el.dataset.i,j=i+(+el.dataset.d);if(j<0||j>=pe.weeks.length)return;planReorder(pe,i,j);render();document.querySelector(`[data-act=planMove][data-i="${j}"][data-d="${el.dataset.d}"]`)?.focus()},
   planRedraft(el){const pe=S.ad.pe;const w=pe.weeks[+el.dataset.i];const next=PROMPT_POOL.find(q=>!pe.weeks.some(x=>x.q.includes(q)))||PROMPT_POOL[(PROMPT_POOL.indexOf(w.q)+1)%PROMPT_POOL.length];
     w.q=next;w.src='nectar';delete S.ad.peErr[+el.dataset.i];pe.sel=+el.dataset.i;render()},
   planSave(){S.ad.plan=deep(S.ad.pe);delete S.ad.plan.sel;S.ad.pe=null;S.screen='admin';S.ad.tab='schedule';snack('Prompts saved as a draft');render()},
-  planSchedule(){const pe=S.ad.pe;const err={};pe.weeks.forEach((w,i)=>{if(!w.q.trim())err[i]='Write a question or remove this week'});
+  planSchedule(){const pe=S.ad.pe;const err={};pe.weeks.forEach((w,i)=>{if(!w.q.trim())err[i]='Write a question or remove this prompt'});
     if(Object.keys(err).length){S.ad.peErr=err;render();return}
     pe.weeks.forEach(w=>{w.q=w.q.trim();w.status='scheduled'});S.ad.plan=deep(pe);delete S.ad.plan.sel;S.ad.pe=null;
-    const first=Math.min(...S.ad.plan.weeks.map(w=>w.n));S.screen='admin';S.ad.tab='schedule';S.ad.stab='cal';S.ad.week=first-1;
+    const first=1;S.screen='admin';S.ad.tab='schedule';S.ad.stab='cal';S.ad.week=first-1;
     snack(`${plural(S.ad.plan.weeks.length,'prompt')} scheduled`);render()}
 });
 document.addEventListener('input',e=>{const el=e.target;if(el.dataset&&el.dataset.pq!=null&&S.ad?.pe){const i=+el.dataset.pq;const w=S.ad.pe.weeks[i];
