@@ -1096,7 +1096,7 @@ function scrHome(){
   const stat=(label,val,sub)=>`<div><div class="ann">${label}</div><div class="statv">${val}</div><div class="cap">${sub}</div></div>`;
   const stats=L()?`${stat('Active teachers',Math.round(r[2][0]/tot*100)+'%',`${r[2][0]} of ${tot} teachers shared posts`)}${stat('Messages sent',r[2][1],'From teachers')}${stat('Active groups',`${r[2][2]} <span class="ann" style="font-size:14px;font-weight:400">of ${ng}</span>`,'With at least one post')}`
     :['Active teachers','Messages sent','Active groups'].map(l=>stat(l,'—','Shows once the program launches')).join('');
-  const items=L()?weekItems(0).filter(i=>!i.note).map(it=>({...it,status:itemStatus(it)})):[];
+  const items=(L()||a.emptySched)?weekItems(0).filter(i=>!i.note).map(it=>({...it,status:itemStatus(it)})):[];
   const rows=items.map(it=>{const st=dispStatus(it.status);const d=addDays(START,it.day);return `<tr><td><div style="font-weight:600">${fmtDay(d)}</div><div>${it.time} EAT</div></td>
     <td><div style="font-weight:600">${esc(it.title)}</div><span class="ann trunc" style="max-width:520px">${esc(it.desc)}</span></td><td>${esc(it.rec)}</td><td>${chip(st)}</td>
     <td style="text-align:right"><button class="btn flat" style="color:#000" data-act="itemAct" data-tpl="${it.tpl}" data-st="${st}">${actLabel({...it,status:st})}</button></td></tr>`}).join('');
@@ -1110,7 +1110,8 @@ function scrHome(){
     <div class="stats">${stats}</div></div>
    <div class="apage"><div class="ahead"><div style="flex:1"><h2 class="h4">This week</h2><div class="ann">Mon 18 – Sun 24 Jan</div></div><button class="btn secondary" data-act="atab" data-tab="schedule">VIEW FULL SCHEDULE</button></div>
     ${rows?`<table class="atable" style="margin-top:16px"><colgroup><col style="width:130px"><col><col style="width:120px"><col style="width:130px"><col style="width:120px"></colgroup><thead><tr><th>Time</th><th>Message</th><th>Recipients</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
-      :`<div class="empty" style="padding:40px 0"><div class="h5">Nothing scheduled this week</div><div class="ann">Messages start going out once you launch the program.</div></div>`}</div>`);
+      :a.emptySched&&!hasScheduled()&&a.plan?.weeks.length?`<div class="empty" style="padding:40px 0"><div class="h5">Nothing scheduled yet</div><div class="ann">Nectar drafted prompts for your first ${plural(a.plan.weeks.length,'week')}.</div><button class="btn primary" data-act="openPlan">REVIEW PROMPTS</button></div>`
+      :`<div class="empty" style="padding:40px 0"><div class="h5">Nothing scheduled this week</div>${L()?'':'<div class="ann">Messages start going out once you launch the program.</div>'}</div>`}</div>`);
 }
 
 /* ---------------- schedule ---------------- */
