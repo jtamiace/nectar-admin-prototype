@@ -1037,7 +1037,7 @@ function userItems(off){
     for(let i=0;i<7;i++){const d=addDays(mon,i);const diff=Math.round((d-d0)/864e5);
       const hit=diff===0||(diff>0&&t.repeat==='Weekly'&&diff%7===0)||(diff>0&&t.repeat==='Every 2 weeks'&&diff%14===0);
       if(hit)out.push({tz:tzAbbr(t.tz),day:i,time:t.time,title:t.name,desc:tokText(t.body),type:t.type,author:t.author,rec:t.recText||'',to:t.recText||'',status:t.status,tpl:t.id})}}
-  const pl=S.ad.plan;if(pl&&pl.weeks.length&&off>=0){const di=PDAYS.indexOf(pl.day);const L=pl.weeks.length;const endD=pl.repeat&&pl.endMode==='date'&&pl.end?parseD(pl.end):null;const when=addDays(START,off*7+di);const w=off<L?pl.weeks[off]:pl.repeat&&(!endD||when<=endD)?pl.weeks[off%L]:null;if(w&&w.status==='scheduled')out.push({tz:tzAbbr(pl.tz),day:di,time:pl.time,title:'Weekly prompt',desc:`Prompt ${pl.weeks.indexOf(w)+1} · ${w.q}`,type:'Prompt',author:w.src==='nectar'?'Nectar':'Admin',rec:planRecLabel(pl),to:planRecLabel(pl),status:'scheduled',tpl:'plan',q:w.q})}
+  const pl=S.ad.plan;if(pl&&pl.weeks.length&&off>=0){const di=PDAYS.indexOf(pl.day);const L=pl.weeks.length;const endD=pl.repeat&&pl.endMode==='date'&&pl.end?parseD(pl.end):null;const when=addDays(START,off*7+di);const gen=off>=L&&pl.repeat&&(!endD||when<=endD)&&pl.weeks.some(x=>x.status==='scheduled');const w=off<L?pl.weeks[off]:gen?{q:'Nectar writes this prompt the week before',src:'nectar',status:'scheduled'}:null;if(w&&w.status==='scheduled')out.push({tz:tzAbbr(pl.tz),day:di,time:pl.time,title:'Weekly prompt',desc:`Prompt ${off+1} · ${w.q}`,type:'Prompt',author:w.src==='nectar'?'Nectar':'Admin',rec:planRecLabel(pl),to:planRecLabel(pl),status:'scheduled',tpl:'plan',q:w.q})}
   return out.sort((x,y)=>x.day-y.day||x.time.localeCompare(y.time));
 }
 const PDAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];const ALLDAYS=PDAYS;
@@ -1192,14 +1192,14 @@ function scrPlan(){
     <div class="field ${err[i]?'error':''}" style="padding-top:10px"><textarea id="pq-${i}" rows="2" data-model="ad.pe.weeks.${i}.q" data-pq="${i}" style="font:inherit;font-size:15px;border:0;background:transparent;width:100%;resize:vertical;outline:none">${esc(w.q)}</textarea></div>
     ${err[i]?`<div class="errtext">${err[i]}</div>`:''}</div>`}).join('');
   const recOpts=[{v:'all',t:`All groups (${a.groups.length})`},...DISTRICTS.filter(d=>a.groups.some(g=>g.district===d)).map(d=>({v:d,t:`${d} groups (${a.groups.filter(g=>g.district===d).length})`}))];
-  const inner=`<div class="apage" style="max-width:1300px"><button class="gl" style="margin-bottom:12px" data-act="planCancel">‹ Schedule</button>
+  const inner=`<div class="apage" style="max-width:1300px">
     <h1 class="h3" style="font-size:24px">Weekly prompts</h1>
     <div class="tplgrid" style="margin-top:20px"><div>
-      <div class="grid4">${selF('pl-day','Day',pe.day,PDAYS,'ad.pe.day')}${timeField('pl-time','Time',pe.time,'ad.pe.time')}${tzField('pl-tz',pe.tz||'Africa/Kampala','ad.pe.tz')}${selF('pl-rec','Recipients',pe.rec,recOpts,'ad.pe.rec')}</div>
+      <div class="h5" style="margin-bottom:8px">When</div><div class="grid4">${selF('pl-day','Day',pe.day,PDAYS,'ad.pe.day')}${timeField('pl-time','Time',pe.time,'ad.pe.time')}${tzField('pl-tz',pe.tz||'Africa/Kampala','ad.pe.tz')}${selF('pl-rec','Recipients',pe.rec,recOpts,'ad.pe.rec')}</div>
       <div style="margin-top:20px">${rows||'<div class="ann" style="padding:16px 0">No prompts yet</div>'}</div>
       <div style="padding-top:4px"><button class="btn flat" data-act="planAdd">${I('add','sm')}ADD PROMPT</button></div>
-      <div style="margin-top:24px"><label class="chk"><input type="checkbox" data-change="planRepeat" ${pe.repeat?'checked':''}> Repeat prompts</label>
-        <div class="cap" style="margin:2px 0 0 26px">${pe.repeat?`After Prompt ${N||1}, start again from Prompt 1.`:`Prompts stop after Prompt ${N||1}.`}</div>
+      <div style="margin-top:24px"><label class="chk"><input type="checkbox" data-change="planRepeat" ${pe.repeat?'checked':''}> Auto-generate new prompts</label>
+        <div class="cap" style="margin:2px 0 0 26px">${pe.repeat?`After Prompt ${N||1}, Nectar writes a new prompt each week.`:`Prompts stop after Prompt ${N||1}.`}</div>
         ${pe.repeat?`<div style="margin:12px 0 0 26px"><div class="radios"><label class="chk"><input type="radio" name="plend" value="never" data-change="planEnd" ${pe.endMode!=='date'?'checked':''}> No end date</label><label class="chk"><input type="radio" name="plend" value="date" data-change="planEnd" ${pe.endMode==='date'?'checked':''}> End on a date</label></div>
           ${pe.endMode==='date'?`<div style="max-width:240px;margin-top:12px">${dateField('pl-end','End date',pe.end,'ad.pe.end')}</div>`:''}</div>`:''}</div></div>
     <div style="position:sticky;top:80px"><div class="h5" style="margin-bottom:8px">Preview</div><div id="planpreview">${planPreview()}</div></div></div></div>`;
@@ -1327,7 +1327,7 @@ function scrTpl(){
     :`<div class="drop" style="padding:24px">${I('upload')}<div>Drag an image, video or PDF here, or</div><button class="btn secondary" data-act="mediaPick">CHOOSE FILE</button>
         <div class="cap">Image up to 5 MB · Video up to 16 MB · PDF up to 100 MB</div><button class="link cap" data-act="mediaBig">Prototype: try a file that’s too large</button></div>
       ${m.state==='big'?`<div class="errtext" style="margin-left:0">trainer-visit-video.mp4 is 48 MB. Videos can be up to 16 MB. Try a shorter clip.</div>`:''}`;
-  const left=e.isNew?'Draft · not yet submitted to Meta':e.status==='approved'?'Approved · 8 of 10 edits left in the next 30 days. Text changes are reviewed by Meta again.':e.status==='pending'?'In review with Meta · usually within 24 hours':e.status==='rejected'?'Rejected by Meta · fix the problem and resubmit':e.status==='paused'?'Paused · nothing sends until you resume it':'Draft';
+  const left=e.isNew?'':e.status==='approved'?'Approved · 8 of 10 edits left in the next 30 days. Text changes are reviewed by Meta again.':e.status==='pending'?'In review with Meta · usually within 24 hours':e.status==='rejected'?'Rejected by Meta · fix the problem and resubmit':e.status==='paused'?'Paused · nothing sends until you resume it':'Draft';
   const inner=`<div class="apage" style="max-width:1300px">
     <div class="row" style="gap:12px"><h1 class="h3" style="font-size:24px">${e.isNew?'New '+e.kind.toLowerCase():esc(e.name)}</h1>${statusBadge}</div>
     ${e.isNew?'':`<div class="cap">${sub}</div>`}
@@ -1346,7 +1346,7 @@ function scrTpl(){
     </div>
     <div style="position:sticky;top:80px"><div class="h5" style="margin-bottom:8px">Preview</div><div id="tplpreview">${previewHtml()}</div></div></div></div>`;
   return ashell('schedule',inner)+`<div class="bottombar"><span class="ann">${left}</span><span class="spacer"></span>
-     <button class="btn flat" style="color:#000" data-act="edCancel">CANCEL</button><button class="btn flat" style="color:#000" data-act="edDraft">SAVE AS DRAFT</button>
+     <button class="btn flat" style="color:#000" data-act="edCancel">CANCEL</button><button class="btn flat" style="color:#000" data-act="edDraft">SAVE DRAFT</button>
      <button class="btn primary" data-act="edSubmit">${e.status==='rejected'?'RESUBMIT FOR REVIEW':'SUBMIT FOR REVIEW'}</button></div><div style="height:72px"></div>`;
 }
 
