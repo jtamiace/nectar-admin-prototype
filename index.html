@@ -1091,8 +1091,8 @@ function weekNav(){
     cal=`<div class="calpop menuwrap"><div class="row" style="justify-content:space-between"><button class="iconbtn" data-act="calMonth" data-d="-1">${I('chevL','sm')}</button><b>${MONL[base.getMonth()]} ${base.getFullYear()}</b><button class="iconbtn" data-act="calMonth" data-d="1">${I('chevR','sm')}</button></div>
       <div class="calgrid">${['M','T','W','T','F','S','S'].map(x=>`<span>${x}</span>`).join('')}${cells.join('')}</div></div>`}
   return `<div class="weeknav"><button class="btn secondary" data-act="thisWeek">THIS WEEK</button>
-    <span class="menuwrap"><button class="btn flat" style="color:#000" data-act="toggleCal">${label} ${I('caret','sm')}</button></span>
-    <button class="iconbtn" data-act="weekStep" data-d="-1" title="Previous week">${I('chevL')}</button><button class="iconbtn" data-act="weekStep" data-d="1" title="Next week">${I('chevR')}</button>${cal}</div>`;
+    <button class="iconbtn" data-act="weekStep" data-d="-1" title="Previous week">${I('chevL')}</button><button class="iconbtn" data-act="weekStep" data-d="1" title="Next week">${I('chevR')}</button>
+    <span class="menuwrap"><button class="btn flat" style="color:#000" data-act="toggleCal">${label} ${I('caret','sm')}</button></span>${cal}</div>`;
 }
 
 /* ---------------- home ---------------- */
