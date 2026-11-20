@@ -693,7 +693,7 @@ function render(){
   const a=document.activeElement,fid=a&&a.id,ss=a&&a.selectionStart,se=a&&a.selectionEnd;
   const pnl=document.getElementById('panel'),pst=pnl?pnl.scrollTop:0;
   const map={programs:scrPrograms,w1:scrW1,w2:scrW2,w3:()=>S.method==='upload'?scrW3Upload():scrW3Manual(),w4:scrW4,w4c:scrW4c,done:scrDone,
-    admin:()=>({home:scrHome,schedule:scrSchedule,groups:scrGroups,group:scrGroup,users:scrUsers,library:scrLibrary,settings:scrSettings}[S.ad.tab]||scrHome)(),tpl:scrTpl,upload:scrUpload,editgroups:scrW4};
+    plan:scrPlan,admin:()=>({home:scrHome,schedule:scrSchedule,groups:scrGroups,group:scrGroup,users:scrUsers,library:scrLibrary,settings:scrSettings}[S.ad.tab]||scrHome)(),tpl:scrTpl,upload:scrUpload,editgroups:scrW4};
   let html=map[S.screen]();
   if(S.snackbar){const nb=S.screen==='programs'||S.screen==='done'||S.screen==='admin';html+=`<div class="snackbar ${nb?'nobar':''}" role="status"><span>${esc(S.snackbar.text)}</span>${S.snackbar.undo?'<button class="btn" data-act="undo">UNDO</button>':''}<button class="btn" data-act="dismiss">DISMISS</button></div>`}
   if(S.modal) html+=modalHtml();
@@ -901,6 +901,7 @@ Object.assign(P,{
  pause:'M6 19h4V5H6v14zm8-14v14h4V5h-4z',
  more:'M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
  arrowL:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',arrowR:'M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z',
+ refresh:'M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
  chevL:'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', chevR:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
  person:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'
 });
@@ -918,7 +919,7 @@ function rel(min){if(min==null)return '—';const m=Math.round(min);
   const y=Math.floor(d/365);return y===1?'1 year ago':y+' years ago'}
 function absT(min){const d=new Date(NOW.getTime()-min*60000);return `${DAYS[d.getDay()].slice(0,3)} ${fmtD(d)} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} EAT`}
 const relCell=min=>min==null?'<span class="ann">—</span>':`<span class="tip" data-tip="${absT(min)}">${rel(min)}</span>`;
-const STC={sent:['Sent','mail','#e8edff','#2f4fc9'],approved:['Approved','check','#e3f5e8','#1b7d36'],pending:['Pending','clock','#fff3cd','#8a6100'],rejected:['Rejected','err','#ffe5e1','#c21b00'],paused:['Paused','pause','#eeeeee','#555'],draft:['Draft','edit','#eeeeee','#555'],
+const STC={scheduled:['Scheduled','clock','#e8edff','#2f4fc9'],sent:['Sent','mail','#e8edff','#2f4fc9'],approved:['Approved','check','#e3f5e8','#1b7d36'],pending:['Pending','clock','#fff3cd','#8a6100'],rejected:['Rejected','err','#ffe5e1','#c21b00'],paused:['Paused','pause','#eeeeee','#555'],draft:['Draft','edit','#eeeeee','#555'],
   joined:['Joined','check','#e3f5e8','#1b7d36'],invited:['Invited','clock','#fff3cd','#8a6100'],notinv:['Not invited',null,'#eeeeee','#555']};
 const chip=(k,label)=>{const c=STC[k];return `<span class="chip ${c[1]?'':'nolead'}" style="background:${c[2]};color:${c[3]}">${c[1]?I(c[1]):''}${esc(label||c[0])}</span>`};
 const BOT='<span class="bot">BOT</span>';
@@ -955,9 +956,11 @@ function seedAdmin(){
   return {launched:true,tab:'home',sort:{},menu:null,q:{},f:{},week:0,cal:false,calMonth:0,range:'7',
     trainers,groups,teachers,templates:seedTemplates(),files:seedFiles(),bannerU:true,bannerG:true,sel:new Set(),gtab:'conv',group:null,shown:25};
 }
-const AUTO_PREGEN=['invite','joinrem','reflect','privacy','ontopic','quiet','nudge','across','digest'];
+const AUTO_PREGEN=['invite','joinrem','reflect','privacy','ontopic','quiet','nudge','across','digest','weekly'];
+const PROMPT_POOL=['Think of a moment this week when a learner surprised you. What did they do, and what did you do next?','What is one thing you tried this week because of something a colleague shared?','Share one way you checked that learners understood a new idea this week.','Describe a question a learner asked that made you think.','What small change made a lesson run more smoothly this week?','When did learners help each other well this week? What made it work?','Which everyday object helped you explain an idea in class?','What is one thing you would keep doing from this week’s lessons?'];
 function seedFromWizard(){const a=seedAdmin();a.launched=false;a.emptySched=true;
-  a.templates=a.templates.filter(t=>AUTO_PREGEN.includes(t.id)).map(t=>({...t,status:t.id==='invite'?'approved':'pending',created:'18 Jan 2027',sched:null,reason:null}));
+  a.plan={day:'Monday',time:'08:00',rec:'all',weeks:[1,2,3,4].map(n=>({n,q:PROMPT_POOL[n-1],src:'nectar',status:'draft'}))};
+  a.templates=a.templates.filter(t=>AUTO_PREGEN.includes(t.id)).map(t=>({...t,author:t.id==='weekly'?'Nectar':t.author,type:t.id==='weekly'?'Prompt':t.type,freq:t.id==='weekly'?'Every week':t.freq,status:['invite','weekly'].includes(t.id)?'approved':'pending',created:'18 Jan 2027',sched:null,reason:null}));
   if(S.groups.length&&S.teachers.length){
     a.trainers=S.trainers.map(t=>({id:t.id,name:t.name,district:t.district,phone:t.phone,role:'trainer',school:t.school||'',subjects:t.subjects||'',wa:'joined',last:null}));
     a.groups=S.groups.map(g=>({id:g.id,name:g.name,district:members(g.id)[0]?.district||'',trainer:g.trainer||null,last:null}));
@@ -1025,9 +1028,12 @@ function userItems(off){
     for(let i=0;i<7;i++){const d=addDays(mon,i);const diff=Math.round((d-d0)/864e5);
       const hit=diff===0||(diff>0&&t.repeat==='Weekly'&&diff%7===0)||(diff>0&&t.repeat==='Every 2 weeks'&&diff%14===0);
       if(hit)out.push({day:i,time:t.time,title:t.name,desc:tokText(t.body),type:t.type,author:t.author,rec:t.recText||'',to:t.recText||'',status:t.status,tpl:t.id})}}
+  const pl=S.ad.plan;if(pl){const di=PDAYS.indexOf(pl.day);for(const w of pl.weeks)if(w.status==='scheduled'&&w.n-1===off)out.push({day:di,time:pl.time,title:'Weekly prompt',desc:`Week ${w.n} · ${w.q}`,type:'Prompt',author:w.src==='nectar'?'Nectar':'Admin',rec:planRecLabel(pl),to:planRecLabel(pl),status:'scheduled',tpl:'plan',q:w.q})}
   return out.sort((x,y)=>x.day-y.day||x.time.localeCompare(y.time));
 }
-const hasScheduled=()=>S.ad.templates.some(t=>t.userMade&&t.date&&t.status!=='draft');
+const PDAYS=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const planRecLabel=pl=>pl.rec==='all'?`${AD().groups.length} groups`:`${AD().groups.filter(g=>g.district===pl.rec).length} groups`;
+const hasScheduled=()=>S.ad.templates.some(t=>t.userMade&&t.date&&t.status!=='draft')||!!S.ad.plan?.weeks.some(w=>w.status==='scheduled');
 function weekItems(off){
   if(S.ad.emptySched) return userItems(off);
   if(off<0) return [];
@@ -1111,7 +1117,7 @@ function scrHome(){
 function scrSchedule(){
   const a=AD();const sub=a.stab||'cal';
   let body;
-  if(sub==='cal') body=a.emptySched&&!hasScheduled()?`<div class="empty" style="padding:56px 0">${I('clock')}<div class="h5">Nothing scheduled yet</div><button class="btn primary" data-act="newTpl">NEW TEMPLATE</button></div>`:`${weekNav()}${weekTable(a.week)}`;
+  if(sub==='cal') body=a.emptySched&&!hasScheduled()?`<div class="empty" style="padding:56px 0">${I('clock')}<div class="h5">Nothing scheduled yet</div>${a.plan?.weeks.length?`<div class="ann">Nectar drafted prompts for your first ${plural(a.plan.weeks.length,'week')}.</div>`:''}<div class="row" style="gap:12px;margin-top:4px">${a.plan?'<button class="btn primary" data-act="openPlan">REVIEW PROMPTS</button><button class="btn secondary" data-act="newTpl">NEW TEMPLATE</button>':'<button class="btn primary" data-act="newTpl">NEW TEMPLATE</button>'}</div></div>`:`${weekNav()}${weekTable(a.week)}`;
   else body=templatesTable();
   return ashell('schedule',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Schedule</h1><button class="btn primary" data-act="newTpl">NEW TEMPLATE</button></div>
     <div class="subtabs"><button class="subtab ${sub==='cal'?'on':''}" data-act="stab" data-s="cal">Calendar</button><button class="subtab ${sub==='tpl'?'on':''}" data-act="stab" data-s="tpl">Templates</button></div>${body}</div>`);
@@ -1132,6 +1138,48 @@ function templatesTable(){
     <thead><tr><th>${sortH('tpl','name','Message')}</th><th>${sortH('tpl','type','Type')}</th><th>Author</th><th>Recipients</th><th>Frequency</th><th>${sortH('tpl','sched','Scheduled')}</th><th>${sortH('tpl','created','Created')}</th><th>${sortH('tpl','status','Status')}</th><th></th></tr></thead>
     <tbody>${rows||'<tr><td colspan="9" class="ann" style="text-align:center;padding:32px">No templates match</td></tr>'}</tbody></table>`;
 }
+
+/* ---------------- weekly prompts plan ---------------- */
+function openPlan(){S.ad.pe=deep(S.ad.plan);S.ad.pe.sel=0;S.ad.peErr={};S.screen='plan';window.scrollTo(0,0);render()}
+function planDate(pe,n){return addDays(START,(n-1)*7+PDAYS.indexOf(pe.day))}
+function planPreview(){const pe=S.ad.pe;const w=pe.weeks[pe.sel]||pe.weeks[0];const g=AD().groups[0]?.name||'Group 1';
+  return `<div class="preview"><div class="bubble">Hi ${esc(g)}! This week’s question: ${w&&w.q?esc(w.q):'<span class="ann">…</span>'} Share a bright spot here, or reply REFLECT to think it through privately.</div></div>`}
+function scrPlan(){
+  const pe=S.ad.pe,a=AD();const err=S.ad.peErr||{};
+  const rows=pe.weeks.map((w,i)=>{const d=planDate(pe,w.n);return `<div class="pweek" style="border-top:1px solid var(--fine);padding:16px 0">
+    <div class="row" style="gap:10px;margin-bottom:8px"><b>Week ${w.n}</b><span class="ann">${fmtDay(d)}</span>${w.src==='nectar'?'<span class="cap">Drafted by Nectar</span>':w.src==='edited'?'<span class="cap">Edited</span>':''}${chip(w.status==='scheduled'?'scheduled':'draft')}<span class="spacer"></span>
+      <button class="iconbtn" title="Draft another" data-act="planRedraft" data-i="${i}">${I('refresh','sm')}</button><button class="iconbtn" title="Remove week" data-act="planRm" data-i="${i}">${I('del','sm')}</button></div>
+    <div class="field ${err[i]?'error':''}" style="padding-top:10px"><textarea id="pq-${i}" rows="2" data-model="ad.pe.weeks.${i}.q" data-pq="${i}" style="font:inherit;font-size:15px;border:0;background:transparent;width:100%;resize:vertical;outline:none">${esc(w.q)}</textarea></div>
+    ${err[i]?`<div class="errtext">${err[i]}</div>`:''}</div>`}).join('');
+  const recOpts=[{v:'all',t:`All groups (${a.groups.length})`},...DISTRICTS.filter(d=>a.groups.some(g=>g.district===d)).map(d=>({v:d,t:`${d} groups (${a.groups.filter(g=>g.district===d).length})`}))];
+  const inner=`<div class="apage" style="max-width:1300px"><button class="gl" style="margin-bottom:12px" data-act="planCancel">‹ Schedule</button>
+    <h1 class="h3" style="font-size:24px">Weekly prompts</h1>
+    <div class="tplgrid" style="margin-top:20px"><div>
+      <div class="grid3">${selF('pl-day','Day',pe.day,PDAYS,'ad.pe.day')}${selF('pl-time','Time',pe.time,['07:00','08:00','09:00','12:00','16:00','18:00'].map(v=>({v,t:v+' EAT'})),'ad.pe.time')}${selF('pl-rec','Recipients',pe.rec,recOpts,'ad.pe.rec')}</div>
+      <div style="margin-top:20px">${rows||'<div class="ann" style="padding:16px 0">No weeks planned</div>'}</div>
+      <div style="border-top:1px solid var(--fine);padding-top:8px"><button class="btn flat" data-act="planAdd">${I('add','sm')}ADD WEEK</button></div></div>
+    <div style="position:sticky;top:80px"><div class="h5" style="margin-bottom:8px">Preview</div><div id="planpreview">${planPreview()}</div></div></div></div>`;
+  return ashell('schedule',inner)+`<div class="bottombar"><span class="spacer"></span><button class="btn flat" style="color:#000" data-act="planCancel">CANCEL</button><button class="btn flat" style="color:#000" data-act="planSave">SAVE DRAFT</button><button class="btn primary" data-act="planSchedule" ${pe.weeks.length?'':'disabled'}>SCHEDULE PROMPTS</button></div><div style="height:72px"></div>`;
+}
+Object.assign(A,{
+  openPlan(){openPlan()},
+  planCancel(){S.ad.pe=null;S.screen='admin';S.ad.tab='schedule';render()},
+  planAdd(){const pe=S.ad.pe;const n=Math.max(0,...pe.weeks.map(w=>w.n))+1;pe.weeks.push({n,q:'',src:'admin',status:'draft'});pe.sel=pe.weeks.length-1;render();document.getElementById('pq-'+(pe.weeks.length-1))?.focus()},
+  planRm(el){const pe=S.ad.pe;const i=+el.dataset.i;const w=pe.weeks.splice(i,1)[0];pe.sel=0;snack(`Week ${w.n} removed`,()=>{pe.weeks.splice(i,0,w)});render()},
+  planRedraft(el){const pe=S.ad.pe;const w=pe.weeks[+el.dataset.i];const next=PROMPT_POOL.find(q=>!pe.weeks.some(x=>x.q.includes(q)))||PROMPT_POOL[(PROMPT_POOL.indexOf(w.q)+1)%PROMPT_POOL.length];
+    w.q=next;w.src='nectar';delete S.ad.peErr[+el.dataset.i];pe.sel=+el.dataset.i;render()},
+  planSave(){S.ad.plan=deep(S.ad.pe);delete S.ad.plan.sel;S.ad.pe=null;S.screen='admin';S.ad.tab='schedule';snack('Prompts saved as a draft');render()},
+  planSchedule(){const pe=S.ad.pe;const err={};pe.weeks.forEach((w,i)=>{if(!w.q.trim())err[i]='Write a question or remove this week'});
+    if(Object.keys(err).length){S.ad.peErr=err;render();return}
+    pe.weeks.forEach(w=>{w.q=w.q.trim();w.status='scheduled'});S.ad.plan=deep(pe);delete S.ad.plan.sel;S.ad.pe=null;
+    const first=Math.min(...S.ad.plan.weeks.map(w=>w.n));S.screen='admin';S.ad.tab='schedule';S.ad.stab='cal';S.ad.week=first-1;
+    snack(`${plural(S.ad.plan.weeks.length,'prompt')} scheduled`);render()}
+});
+document.addEventListener('input',e=>{const el=e.target;if(el.dataset&&el.dataset.pq!=null&&S.ad?.pe){const i=+el.dataset.pq;const w=S.ad.pe.weeks[i];
+  if(/\n/.test(el.value)){el.value=el.value.replace(/\n+/g,' ');w.q=el.value}if(w.src==='nectar')w.src='edited';w.status='draft';S.ad.pe.sel=i;delete S.ad.peErr[i];
+  const p=document.getElementById('planpreview');if(p)p.innerHTML=planPreview()}});
+document.addEventListener('focusin',e=>{const el=e.target;if(el.dataset&&el.dataset.pq!=null&&S.ad?.pe){S.ad.pe.sel=+el.dataset.pq;const p=document.getElementById('planpreview');if(p)p.innerHTML=planPreview()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.pq!=null)e.preventDefault()});
 
 /* ---------------- template editor ---------------- */
 const VARS={
@@ -1311,7 +1359,7 @@ function scrGroup(){
       <div class="h5">Next from Nectar</div>${a.emptySched?(()=>{let nx=null;for(let w=0;w<20&&!nx;w++){nx=userItems(w)[0];if(nx)nx.w=w}
         if(!nx)return `<div class="ann" style="margin-top:8px">Nothing scheduled yet</div>`;const d=addDays(START,nx.w*7+nx.day);
         return `<div class="cap" style="margin-top:10px">${esc(nx.title)}</div><div style="font-weight:600">${DAYS[d.getDay()]} ${fmtD(d)} · ${nx.time} EAT</div><div class="cap">${nx.type} · ${esc(nx.author)}</div><div style="margin:6px 0 10px">${chip(nx.status)}</div>
-        <div class="botmsg" style="font-size:14px">${esc(nx.desc)}</div><button class="btn flat" style="margin-top:8px;padding:0 4px" data-act="openTpl" data-id="${nx.tpl}">EDIT MESSAGE</button>`})():`<div class="cap" style="margin-top:10px">Weekly prompt</div><div style="font-weight:600">Monday 25 Jan · 08:00 EAT</div><div class="cap">Prompt · Kenneth Oroma</div>
+        <div class="botmsg" style="font-size:14px">${esc(nx.tpl==='plan'?`Hi ${g.name}! This week’s question: ${nx.q} Share a bright spot here, or reply REFLECT to think it through privately.`:nx.desc)}</div><button class="btn flat" style="margin-top:8px;padding:0 4px" data-act="openTpl" data-id="${nx.tpl}">EDIT MESSAGE</button>`})():`<div class="cap" style="margin-top:10px">Weekly prompt</div><div style="font-weight:600">Monday 25 Jan · 08:00 EAT</div><div class="cap">Prompt · Kenneth Oroma</div>
       <div style="margin:6px 0 10px">${chip('approved')}</div>
       <div class="botmsg" style="font-size:14px">Hi ${esc(g.name)}! This week’s question: what is one thing you tried this week because of something a colleague shared? Share it here, or reply REFLECT to think it through privately.</div>
       <button class="btn flat" style="margin-top:8px;padding:0 4px" data-act="openTpl" data-id="weekly">EDIT MESSAGE</button>`}</div>`;
@@ -1538,10 +1586,10 @@ Object.assign(A,{
   pickDay(el){S.ad.week=+el.dataset.off;S.ad.cal=false;render()},
   itemAct(el){const st=el.dataset.st,id=el.dataset.tpl;
     if(st==='paused'){if(id==='checkin')S.ad.checkinStatus='approved';const t=S.ad.templates.find(x=>x.id===id);if(t)t.status='approved';snack('Weekly check-in resumed. It sends on Sun 24 Jan at 18:00 EAT.');render();return}
-    openEditor(id,{sent:st==='sent'})},
+    if(id==='plan'){openPlan();return}openEditor(id,{sent:st==='sent'})},
   newTpl(){S.ad.md={kind:'Prompt'};openModal('a-newtype')},
   doNewType(){const k=S.ad.md.kind;S.modal=null;openEditor(null,{kind:k})},
-  openTpl(el){S.ad.menu=null;openEditor(el.dataset.id)},
+  openTpl(el){S.ad.menu=null;const id=el.dataset.id;if(id==='plan'||(id==='weekly'&&S.ad.plan)){openPlan();return}openEditor(id)},
   archiveTpl(el){const a=AD();const i=a.templates.findIndex(t=>t.id===el.dataset.id);const t=a.templates[i];a.templates.splice(i,1);S.ad.menu=null;snack(`${t.name} archived`,()=>a.templates.splice(i,0,t));render()},
   askDelTpl(el){S.ad.md={id:el.dataset.id};S.ad.menu=null;openModal('a-deltpl')},
   doDelTpl(){const a=AD();const t=a.templates.find(x=>x.id===a.md.id);a.templates=a.templates.filter(x=>x!==t);S.modal=null;snack(`${t.name} deleted`);render()},
