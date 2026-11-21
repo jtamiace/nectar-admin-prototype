@@ -189,6 +189,17 @@ table.sect{scroll-margin-top:124px}
 
 /* ================= admin UI ================= */
 .appbar.admin{padding:0 24px 0 16px;gap:24px;justify-content:flex-start}
+.snscrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60}
+.sidenav{position:fixed;top:0;left:0;bottom:0;width:300px;background:#fff;z-index:61;box-shadow:0 8px 16px rgba(0,0,0,.2);display:flex;flex-direction:column;overflow:auto}
+.snhead{height:56px;background:var(--yellow,#f8d354);display:flex;align-items:center;gap:20px;padding:0 16px;font-weight:600;font-size:16px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.snbody{padding:12px 8px}
+.snitem{display:flex;align-items:center;gap:16px;width:100%;padding:12px 16px;border:0;background:none;border-radius:4px;font:inherit;font-size:16px;cursor:pointer;text-align:left;color:#212121}
+.snitem span{flex:1}.snitem:hover,.snsub:hover{background:#f0f0f0}
+.snitem.on{background:#e6e6e6;color:#4368f5;font-weight:600}
+.snsub{display:block;width:100%;padding:12px 16px 12px 56px;border:0;background:none;font:inherit;font-size:14px;text-align:left;cursor:pointer;color:#212121;border-radius:4px}
+.snsub.on{color:#4368f5;font-weight:600}
+.sidenav hr{border:0;border-top:1px solid #e0e0e0;margin:12px 0}
+.pweek textarea{overflow:hidden;resize:none!important}
 .appbar.admin .brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:16px;background:none;border:0;cursor:pointer;font-family:inherit;padding:0 8px 0 0}
 .navtabs{display:flex;height:56px;align-self:stretch}
 .navtab{display:flex;align-items:center;gap:6px;padding:0 16px;background:none;border:0;font:inherit;cursor:pointer;color:#000;border-bottom:3px solid transparent;border-top:3px solid transparent}
@@ -699,7 +710,7 @@ function render(){
   const a=document.activeElement,fid=a&&a.id,ss=a&&a.selectionStart,se=a&&a.selectionEnd;
   const pnl=document.getElementById('panel'),pst=pnl?pnl.scrollTop:0;
   const map={programs:scrPrograms,w1:scrW1,w2:scrW2,w3:()=>S.method==='upload'?scrW3Upload():scrW3Manual(),w4:scrW4,w4c:scrW4c,done:scrDone,
-    plan:scrPlan,admin:()=>({home:scrHome,schedule:scrSchedule,groups:scrGroups,group:scrGroup,users:scrUsers,library:scrLibrary,settings:scrSettings}[S.ad.tab]||scrHome)(),tpl:scrTpl,upload:scrUpload,editgroups:scrW4};
+    plan:scrPlan,admin:()=>({home:scrSchedule,schedule:scrSchedule,groups:scrGroups,group:scrGroup,users:scrUsers,library:scrLibrary,settings:scrSettings}[S.ad.tab]||scrSchedule)(),tpl:scrTpl,upload:scrUpload,editgroups:scrW4};
   let html=map[S.screen]();
   if(S.snackbar){const nb=S.screen==='programs'||S.screen==='done'||S.screen==='admin';html+=`<div class="snackbar ${nb?'nobar':''}" role="status"><span>${esc(S.snackbar.text)}</span>${S.snackbar.undo?'<button class="btn" data-act="undo">UNDO</button>':''}<button class="btn" data-act="dismiss">DISMISS</button></div>`}
   if(S.modal) html+=modalHtml();
@@ -710,6 +721,7 @@ function render(){
   if(S.modal){const m=document.querySelector('.modal [data-focus]');if(m&&!fid)m.focus()}
   wrapTables();
   tocSync();
+  document.querySelectorAll('.pweek textarea').forEach(autoGrow);
 }
 // Let wide tables scroll sideways inside their card instead of spilling out.
 // Row menus inside a scrolling table are positioned against the viewport so they aren't clipped.
@@ -858,7 +870,7 @@ const A={
   saveRename(){const v=S.renameVal.trim();if(!v){S.renameErr='Enter a group name';render();return}
     if(S.groups.some(g=>g.id!==S.renaming&&g.name.toLowerCase()===v.toLowerCase())){S.renameErr='Another group already has this name';render();return}
     S.groups.find(g=>g.id===S.renaming).name=v;S.renaming=null;render()},
-  createGroups(){const n=S.groups.length;S.draft=null;S.ad=seedFromWizard();snack(`${plural(n,'group')} created. Launch the program when you’re ready to send invites.`);aGo('home')}
+  createGroups(){const n=S.groups.length;S.draft=null;S.ad=seedFromWizard();snack(`${plural(n,'group')} created. Launch the program when you’re ready to send invites.`);aGo('schedule',{stab:'cal'})}
 };
 const CH={
   method(el){S.method=el.value;render()},
@@ -911,7 +923,7 @@ Object.assign(P,{
  arrowL:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',arrowR:'M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z',
  calendar:'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 002 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7z',
  refresh:'M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z',
- chevL:'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', chevR:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z', chevU:'M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z', chevD:'M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z', drag:'M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+ chevL:'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z', chevR:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z', logout:'M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5a2 2 0 00-2 2v4h2V5h14v14H5v-4H3v4a2 2 0 002 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z', chevU:'M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z', chevD:'M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z', drag:'M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
  person:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'
 });
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -964,7 +976,7 @@ function seedAdmin(){
   [['Betty Akello','156','Nkoma Secondary School','Biology'],['Charles Ochieng','166','Kamuge High School','Maths'],['Isaac Omoding','163','Nkoma Secondary School','Maths']].forEach(([name,num,school,subjects])=>teachers.push({id:nid('p'),name,phone:'+256 772 ••• '+num,district:'Busia',school,subjects,role:'teacher',group:null,wa:'notinv',last:null}));
   const sq=['What is one thing you tried this week because of something a colleague shared?','Describe a question a learner asked that made you think.','What did you change in a lesson after it didn’t go as planned?'];
   const series=[{id:'weekly',name:'Weekly prompts',sample:true,author:'Kenneth Oroma',created:'5 Jan 2027',day:'Monday',time:'08:00',tz:'Africa/Kampala',rec:'all',weeks:[{n:1,q:PROMPT_POOL[0],src:'admin',status:'sent'},...sq.map((q,i)=>({n:i+2,q,src:'admin',status:'scheduled'}))]}];
-  return {launched:true,tab:'home',sort:{tpl:{k:'sched',d:1}},menu:null,q:{},f:{tplStatus:'scheduled'},week:0,series,cal:false,calMonth:0,range:'7',
+  return {launched:true,tab:'schedule',stab:'cal',sort:{tpl:{k:'sched',d:1}},menu:null,q:{},f:{},week:0,series,cal:false,calMonth:0,range:'7',
     trainers,groups,teachers,templates:seedTemplates(),files:seedFiles(),bannerU:true,bannerG:true,sel:new Set(),gtab:'conv',group:null,shown:25};
 }
 const AUTO_PREGEN=['invite','joinrem','reflect','privacy','ontopic','quiet','nudge','across','digest','weekly'];
@@ -1019,12 +1031,19 @@ const AV_COL=['#e0533b','#2f8f6f','#6a5acd','#d98b1f','#3a7bd5','#c2185b'];
 const avatar=n=>`<span class="avatar" style="background:${AV_COL[[...n].reduce((s,c)=>s+c.charCodeAt(0),0)%AV_COL.length]}">${initials(n)}</span>`;
 
 /* ---------------- shell ---------------- */
-const TABS=[['home','Program','dash'],['schedule','Schedule','clock'],['groups','Groups','groups'],['users','Users','people'],['library','Library','library'],['settings','Settings','gear']];
+const TABS=[['schedule','Schedule','clock'],['groups','Groups','groups'],['users','Users','people'],['library','Library','library'],['settings','Settings','gear']];
 function ashell(tab,inner){
-  return `<div class="appbar yellow admin"><button class="brand" data-act="toPrograms" title="All programs">${I('menu')}Nectar</button>
+  return `${S.ad.nav?sideNav(tab):''}<div class="appbar yellow admin"><button class="brand" data-act="navOpen" aria-label="Open menu" aria-expanded="${!!S.ad.nav}">${I('menu')}Nectar</button>
     <nav class="navtabs">${TABS.map(([k,l,ic])=>`<button class="navtab ${tab===k?'on':''}" data-act="atab" data-tab="${k}">${I(ic)}${l}</button>`).join('')}</nav>
     <span class="user">${I('person')}Admin</span></div><div class="acontent">${inner}</div>`;
 }
+function autoGrow(t){t.style.height='auto';t.style.height=t.scrollHeight+'px'}
+document.addEventListener('input',e=>{if(e.target.matches&&e.target.matches('.pweek textarea'))autoGrow(e.target)});
+window.addEventListener('resize',()=>document.querySelectorAll('.pweek textarea').forEach(autoGrow));
+function sideNav(tab){const sub=TABS.map(([k,l])=>`<button class="snsub ${tab===k||(k==='groups'&&tab==='group')?'on':''}" data-act="navGo" data-tab="${k}">${l}</button>`).join('');
+  return `<div class="snscrim" data-act="navClose"></div><nav class="sidenav" aria-label="Main"><div class="snhead"><button class="iconbtn" data-act="navClose" aria-label="Close menu">${I('close')}</button><span>Nectar</span></div>
+    <div class="snbody"><button class="snitem on" data-act="navGo" data-tab="schedule" aria-expanded="true">${I('dash')}<span>Program</span>${I('chevU','sm')}</button>${sub}
+    <hr><button class="snitem" data-act="signOut">${I('logout')}<span>Sign out</span></button></div></nav>`}
 function fullShell(title,inner,{left='',buttons=''}={}){
   return `<div class="appbar black"><div class="title">${esc(title)}</div><button class="btn white" data-act="fsCancel">CANCEL</button></div>
    <div class="content">${inner}</div>
@@ -1137,7 +1156,7 @@ function scrSchedule(){
   let body;
   if(sub==='cal') body=a.emptySched&&!hasScheduled()?`<div class="empty" style="padding:56px 0">${I('clock')}<div class="h5">Nothing scheduled yet</div>${planS()?.weeks.length?`<div class="ann">Nectar drafted ${plural(planS().weeks.length,'prompt')}.</div>`:''}<div class="row" style="gap:12px;margin-top:4px">${planS()?'<button class="btn primary" data-act="openPlan">REVIEW PROMPTS</button><button class="btn secondary" data-act="newTpl">NEW MESSAGE</button>':'<button class="btn primary" data-act="newTpl">NEW MESSAGE</button>'}</div></div>`:`${weekNav()}${weekTable(a.week)}`;
   else body=templatesTable();
-  return ashell('schedule',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Schedule</h1><button class="btn primary" data-act="newTpl">NEW MESSAGE</button></div>
+  return ashell('schedule',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Schedule</h1>${L()?'':'<button class="btn secondary" data-act="askLaunch">LAUNCH PROGRAM</button>'}<button class="btn primary" data-act="newTpl">NEW MESSAGE</button></div>
     <div class="subtabs"><button class="subtab ${sub==='cal'?'on':''}" data-act="stab" data-s="cal">Calendar</button><button class="subtab ${sub==='tpl'?'on':''}" data-act="stab" data-s="tpl">Messages</button></div>${body}</div>`);
 }
 function seriesNext(x){const k=x.weeks.findIndex(w=>w.status==='scheduled');return k<0?null:planDate(x,k+1)}
@@ -1366,6 +1385,11 @@ function scrTpl(){
 }
 
 /* ---------------- groups ---------------- */
+function activityCard(){const a=AD();const r=RANGES.find(x=>x[0]===a.range)||RANGES[0];const tot=a.teachers.length,ng=a.groups.length;
+  const stat=(label,val,sub)=>`<div><div class="ann">${label}</div><div class="statv">${val}</div><div class="cap">${sub}</div></div>`;
+  const stats=L()?`${stat('Active teachers',Math.round(r[2][0]/tot*100)+'%',`${r[2][0]} of ${tot} teachers shared posts`)}${stat('Messages sent',r[2][1],'From teachers')}${stat('Active groups',`${r[2][2]} <span class="ann" style="font-size:14px;font-weight:400">of ${ng}</span>`,'With at least one post')}`
+    :['Active teachers','Messages sent','Active groups'].map(l=>stat(l,'—','Shows once the program launches')).join('');
+  return `<div class="apage"><div class="row" style="margin-bottom:16px;align-items:center"><h2 class="h4" style="flex:1">Activity</h2><div style="width:200px">${selF('f-range','Date range',a.range,RANGES.map(x=>({v:x[0],t:x[1]})),'ad.range')}</div></div><div class="stats">${stats}</div></div>`}
 function scrGroups(){
   const a=AD();const q=(a.q.g||'').toLowerCase();const fd=a.f.gd||'',ft=a.f.gt||'',fa=a.f.ga||'';
   let list=a.groups.filter(g=>(!q||g.name.toLowerCase().includes(q))&&(!fd||g.district===fd)&&(!ft||(ft==='none'?!g.trainer:g.trainer===ft))
@@ -1378,7 +1402,7 @@ function scrGroups(){
       <td>${m.length} of ${MAX}</td><td><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">${j?chip('joined',j+' joined'):''}${inv?chip('invited',inv+' invited'):''}${ni?chip('notinv',ni+' not invited'):''}</div></td>
       <td>${relCell(L()?g.last:null)}</td>
       <td style="text-align:right">${more('g-'+g.id,mi('View members','openGroup',`data-id="${g.id}" data-t="members"`)+mi('Rename group','askRename',`data-id="${g.id}"`)+mi(t?'Change trainer':'Add trainer','askTrainer',`data-id="${g.id}"`)+mi('Add teachers','editGroups')+mi(m.length>=MAX?'Copy group invite link (group full)':'Copy group invite link','copyLink','',{dis:!L()||m.length>=MAX})+'<hr>'+mi('Delete group','askDelGroup',`data-id="${g.id}"`,{danger:true}),i>list.length-4)}</td></tr>`}).join('');
-  return ashell('groups',`<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Groups</h1><button class="btn secondary" data-act="editGroups">EDIT GROUPS</button><button class="btn primary" data-act="askNewGroup">NEW GROUP</button></div>
+  return ashell('groups',`${activityCard()}<div class="apage"><div class="ahead"><h1 class="h3" style="font-size:24px">Groups</h1><button class="btn secondary" data-act="editGroups">EDIT GROUPS</button><button class="btn primary" data-act="askNewGroup">NEW GROUP</button></div>
     <div class="toolbar" style="margin-top:16px"><div class="filter">${I('search','sm')}<input id="q-g" placeholder="Search groups" value="${esc(a.q.g||'')}" data-model="ad.q.g" data-live="1"></div>
       ${selF('f-gd','District',fd,[{v:'',t:'All'},...DISTRICTS],'ad.f.gd')}${selF('f-gt','Trainer',ft,[{v:'',t:'All'},{v:'none',t:'No trainer'},...a.trainers.map(t=>({v:t.id,t:t.name}))],'ad.f.gt')}${selF('f-ga','Activity',fa,[{v:'',t:'All'},{v:'active',t:'Active this week'},{v:'quiet',t:'Quiet for 2+ weeks'}],'ad.f.ga')}</div>
     ${noTr&&a.bannerG?`<div class="alert warning" style="margin-bottom:12px;align-items:center">${I('warn')}<div style="flex:1">${plural(noTr,'group')} ${noTr===1?'has':'have'} no trainer</div><button class="iconbtn" data-act="closeBanner" data-b="bannerG">${I('close','sm')}</button></div>`:''}
@@ -1623,7 +1647,11 @@ function saveEditGroups(){const a=AD();const old=Object.fromEntries(a.groups.map
 const userById=id=>AD().teachers.find(t=>t.id===id)||AD().trainers.find(t=>t.id===id);
 Object.assign(A,{
   toPrograms(){S.screen='programs';render()},
-  openAdmin(){aGo('home')},
+  navOpen(){S.ad.nav=true;render();document.querySelector('.sidenav .snitem')?.focus()},
+  navClose(){S.ad.nav=false;render();document.querySelector('.appbar .brand')?.focus()},
+  navGo(el){S.ad.nav=false;const t=el.dataset.tab;aGo(t,t==='schedule'?{stab:'cal'}:{})},
+  signOut(){},
+  openAdmin(){aGo('schedule',{stab:'cal'})},
   atab(el){if(el.dataset.tab==='settings')S.ad.set=null;aGo(el.dataset.tab,{group:null})},
   amenu(el,e){e.stopPropagation();const id=el.dataset.id;S.ad.menu=S.ad.menu===id?null:id;render()},
   asort(el){const sc=el.dataset.scope,k=el.dataset.k;const s=S.ad.sort[sc];S.ad.sort[sc]=s&&s.k===k?{k,d:-s.d}:{k,d:1};render()},
@@ -1801,7 +1829,7 @@ document.addEventListener('click',e=>{if(!S.ad)return;
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.ad&&(S.ad.menu||S.ad.vm||S.ad.cal)){S.ad.menu=null;S.ad.vm=null;S.ad.cal=false;render()}});
 if(location.hash==='#admin'){S.ad=seedAdmin();S.program.name='Tororo Science & Maths pilot';S.program.partner='Asante Africa';S.screen='admin'}
 
-A.demoAdmin=()=>{S.ad=seedAdmin();S.program.name='Tororo Science & Maths pilot';S.program.partner='Asante Africa';aGo('home')};
+A.demoAdmin=()=>{S.ad=seedAdmin();S.program.name='Tororo Science & Maths pilot';S.program.partner='Asante Africa';aGo('schedule',{stab:'cal'})};
 
 render();
 </script>
