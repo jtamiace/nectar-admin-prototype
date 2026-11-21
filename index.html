@@ -235,7 +235,7 @@ table.sect{scroll-margin-top:124px}
 .amenu.floating{position:fixed;right:auto;bottom:auto}
 .atable tr.day-last td{border-bottom:1px solid var(--fine)}
 .atable tr.in-day td{border-bottom:0}
-.atable tr.nothing td{background:#f5f5f5}
+.atable tr.nothing td{background:transparent}
 .atable tr:hover td.hov{background:#fafafa}
 .trunc{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip{display:inline-flex;align-items:center;gap:4px;border-radius:12px;padding:2px 10px 2px 6px;font-size:13px;white-space:nowrap}
@@ -1094,26 +1094,27 @@ function sampleItems(off){
    {day:3,time:'17:00',title:'Prompt for review',desc:`Week ${wk+1} · ${qs[(wk-1)%qs.length]}`,type:'Prompt',author:'Kenneth Oroma',rec:'6 trainers',to:'Ruth Okot',status:'approved',tpl:'review',act:'EDIT PROMPT'},
    {day:6,time:'18:00',title:'Weekly check-in',desc:`Week ${wk} · Reply with one word that describes your teaching this week, and one thing you want to try next week.`,type:'Prompt',author:'Kenneth Oroma',rec:'18 groups',to:'All groups',status:S.ad.checkinStatus||'paused',tpl:'checkin'}];
 }
-const dispStatus=st=>(!L()&&st==='sent')?'approved':st;
-const actLabel=it=>{const s=dispStatus(it.status);return s==='sent'?'VIEW':s==='rejected'?'FIX':s==='paused'?'RESUME':(it.act||'EDIT')};
+const dispStatus=st=>(!L()&&st==='sent')?'scheduled':st==='approved'?'scheduled':st;
+const actLabel=it=>{const s=dispStatus(it.status);return s==='rejected'?'FIX':s==='paused'?'RESUME':''};
 function itemStatus(it){if(it.tpl==='checkin')return S.ad.checkinStatus||it.status;const t=S.ad.templates.find(x=>x.id===it.tpl);if(t&&it.status!=='sent'&&['pending','rejected'].includes(t.status))return t.status;return it.status}
 function weekTable(off,{sentTo=false}={}){
   const items=weekItems(off).map(it=>it.note?it:{...it,status:itemStatus(it)});const mon=addDays(START,off*7);
   const rows=[];
   for(let d=0;d<7;d++){
     const date=addDays(mon,d);const its=items.filter(i=>i.day===d);
-    const dayCells=(first)=>`<td style="font-weight:600">${first?DAYS[date.getDay()]:''}</td><td style="font-weight:600">${first?fmtD(date):''}</td>`;
-    if(!its.length){rows.push(`<tr class="nothing day-last">${dayCells(true)}<td></td><td colspan="7" class="ann">${off<0&&d===0?'Nothing scheduled · the program starts on Mon 18 Jan':'Nothing scheduled'}</td></tr>`);continue}
+    const dayCells=(first)=>`<td style="font-weight:600">${first?fmtDay(date):''}</td>`;
+    if(!its.length){rows.push(`<tr class="nothing day-last">${dayCells(true)}<td></td><td colspan="5" class="ann">${off<0&&d===0?'Nothing scheduled · the program starts on Mon 18 Jan':'Nothing scheduled'}</td></tr>`);continue}
     its.forEach((it,i)=>{const last=i===its.length-1;const cls=last?'day-last':'in-day';
-      if(it.note){rows.push(`<tr class="${cls}">${dayCells(i===0)}<td>${it.time} ${it.tz||'EAT'}</td><td colspan="7"><span class="note">${I('info','sm')}${esc(it.note)}</span></td></tr>`);return}
+      if(it.note){rows.push(`<tr class="${cls}">${dayCells(i===0)}<td>${it.time}${it.tz&&it.tz!=='EAT'?' '+it.tz:''}</td><td colspan="5"><span class="note">${I('info','sm')}${esc(it.note)}</span></td></tr>`);return}
       const st=dispStatus(it.status);
-      rows.push(`<tr class="${cls}">${dayCells(i===0)}<td>${it.time} ${it.tz||'EAT'}</td>
-        <td><div style="font-weight:600">${esc(it.title)}</div><span class="ann trunc" style="max-width:300px">${esc(it.desc)}</span></td>
-        <td class="ann">${it.type}</td><td>${esc(it.author)}${it.author==='Nectar'?BOT:''}</td><td>${sentTo?esc(it.to):esc(it.rec)}</td>
-        <td>${chip(st)}</td><td style="text-align:right"><button class="btn flat" style="color:#000" data-act="itemAct" data-tpl="${it.tpl}" data-st="${st}">${actLabel({...it,status:st})}</button></td></tr>`)});
+      const al=actLabel({...it,status:st});
+      rows.push(`<tr class="${cls}">${dayCells(i===0)}<td>${it.time}${it.tz&&it.tz!=='EAT'?' '+it.tz:''}</td>
+        <td><button class="gl" data-act="itemAct" data-tpl="${it.tpl}" data-st="${st}" data-open="1">${esc(it.title)}</button></td>
+        <td class="ann">${it.type}</td><td>${sentTo?esc(it.to):esc(it.rec)}</td>
+        <td>${chip(st)}</td><td style="text-align:right">${al?`<button class="btn flat" style="color:#000" data-act="itemAct" data-tpl="${it.tpl}" data-st="${st}">${al}</button>`:''}</td></tr>`)});
   }
-  return `<table class="atable wk"><colgroup><col style="width:108px"><col style="width:66px"><col style="width:92px"><col><col style="width:112px"><col style="width:140px"><col style="width:96px"><col style="width:116px"><col style="width:118px"></colgroup>
-    <thead><tr><th>Day</th><th>Date</th><th>Time</th><th>Message</th><th>Type</th><th>Author</th><th>${sentTo?'Sent to':'Recipients'}</th><th>Status</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  return `<table class="atable wk"><colgroup><col style="width:130px"><col style="width:110px"><col><col style="width:140px"><col style="width:130px"><col style="width:140px"><col style="width:110px"></colgroup>
+    <thead><tr><th>Date</th><th>Time (EAT)</th><th>Message</th><th>Type</th><th>${sentTo?'Sent to':'Recipients'}</th><th>Status</th><th></th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 function weekNav(){
   const mon=addDays(START,S.ad.week*7),sun=addDays(mon,6);
@@ -1673,7 +1674,7 @@ Object.assign(A,{
   calMonth(el){S.ad.calMonth+=+el.dataset.d;render()},
   pickDay(el){S.ad.week=+el.dataset.off;S.ad.cal=false;render()},
   itemAct(el){const st=el.dataset.st,id=el.dataset.tpl;
-    if(st==='paused'){if(id==='checkin')S.ad.checkinStatus='approved';const t=S.ad.templates.find(x=>x.id===id);if(t)t.status='approved';snack('Weekly check-in resumed. It sends on Sun 24 Jan at 18:00 EAT.');render();return}
+    if(st==='paused'&&!el.dataset.open){if(id==='checkin')S.ad.checkinStatus='approved';const t=S.ad.templates.find(x=>x.id===id);if(t)t.status='approved';snack('Weekly check-in resumed. It sends on Sun 24 Jan at 18:00 EAT.');render();return}
     if(id&&id.startsWith('s:')){openPlan(id.slice(2));return}if(id==='plan'){openPlan('weekly');return}openEditor(id,{sent:st==='sent'})},
   newTpl(){S.ad.md={kind:'Prompt'};openModal('a-newtype')},
   doNewType(){const k=S.ad.md.kind;S.modal=null;if(k==='Prompt'){openPlan(null);return}openEditor(null,{kind:k})},
