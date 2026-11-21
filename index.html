@@ -200,6 +200,10 @@ table.sect{scroll-margin-top:124px}
 .snsub.on{color:#4368f5;font-weight:600}
 .sidenav hr{border:0;border-top:1px solid #e0e0e0;margin:12px 0}
 .pweek textarea{overflow:hidden;resize:none!important}
+.half{max-width:calc(50% - 8px)}
+.vpill{display:inline-block;vertical-align:baseline;background:#e8edfe;color:#3354d9;border:0;border-radius:4px;padding:1px 8px;margin:0 3px;font:inherit;font-size:15px;line-height:1.5;cursor:pointer}
+.vpill:hover,.vpill:focus{background:#d6defd;outline:2px solid #4368f5;outline-offset:1px}
+.tokfield.tokerr{border-bottom:2px solid var(--error);padding-bottom:7px}.tokfield.tokerr>label{color:var(--error)}
 .appbar.admin .brand{display:flex;align-items:center;gap:12px;font-weight:600;font-size:16px;background:none;border:0;cursor:pointer;font-family:inherit;padding:0 8px 0 0}
 .navtabs{display:flex;height:56px;align-self:stretch}
 .navtab{display:flex;align-items:center;gap:6px;padding:0 16px;background:none;border:0;font:inherit;cursor:pointer;color:#000;border-bottom:3px solid transparent;border-top:3px solid transparent}
@@ -1002,7 +1006,7 @@ function seedTemplates(){
    T('reflect','Reflect privately invitation','Invites a teacher to reflect 1:1 with the bot.','Automatic','Nectar','Teachers','After a teacher reacts to the prompt',null,'4 Jan 2027','approved',{trigger:true,body:['Want to think this through privately? Reply REFLECT and I’ll ask you a few questions.']}),
    T('privacy','Remove private information','Asks a teacher to delete a message with student details.','Automatic','Nectar','Teachers','When student information is posted',null,'4 Jan 2027','approved',{trigger:true,body:['Your last message may include a student’s private information. Please delete it from the group.']}),
    T('ontopic','Stay on topic reminder','A gentle reminder to keep the chat on teaching.','Automatic','Nectar','Groups','When a trainer acts on a flag',null,'6 Jan 2027','paused',{trigger:true,body:['A quick reminder: this circle is for sharing teaching moments. Thanks for keeping it on topic!']}),
-   T('digest','Weekly digest','Each trainer’s weekly digest, attached as a PDF.','Automatic','Nectar','Trainers','Every Thursday','Thu 21 Jan · 17:00 EAT','4 Jan 2027','rejected',{reason:'template body cannot end in a variable',media:{state:'done',file:'digest-sample.pdf',meta:'Sample for Meta review · PDF · 3 pages · 180 KB',kind:'PDF'},day:'Thursday',time:'17:00',repeat:'Weekly',body:['Hi ',{v:'trainer'},', here’s the digest for your circles for ',{v:'weekdates'},'. Open the file to see what they talked about.'],footer:'Sent every Thursday'}),
+   T('digest','Weekly digest','Each trainer’s weekly digest, attached as a PDF.','Automatic','Nectar','Trainers','Every Thursday','Thu 21 Jan · 17:00 EAT','4 Jan 2027','rejected',{reason:'template body cannot end in a variable',media:{state:'done',file:'digest-sample.pdf',meta:'Sample for Meta review · PDF · 3 pages · 180 KB',kind:'PDF'},day:'Thursday',time:'17:00',repeat:'Weekly',body:['Hi ',{v:'trainer'},', here’s the digest for your circles for ',{v:'weekdates'}],footer:'Tororo Science & Maths pilot'}),
    T('weekly','Weekly prompt','The week’s reflection question.','Prompt','Kenneth Oroma','Groups','Every Monday','Mon 25 Jan · 08:00 EAT','5 Jan 2027','approved',{date:'Mon 25 Jan 2027',time:'08:00',repeat:'Weekly',header:['Week ',{v:'week'},' reflection'],body:['Hi ',{v:'group'},'! This week’s question: what is one thing you tried because of something a colleague shared? Share a bright spot here, or reply REFLECT to think it through privately.'],footer:'Only your circle sees your replies.'}),
    T('checkin','Weekly check-in','Reply with one word that describes your teaching this week.','Prompt','Kenneth Oroma','Groups','Every Sunday','Sun 24 Jan · 18:00 EAT','5 Jan 2027','paused',{body:['Reply with one word that describes your teaching this week, and one thing you want to try next week.']})
   ];
@@ -1231,7 +1235,7 @@ function scrPlan(){
   const inner=`<div class="apage" style="max-width:1300px">
     <h1 class="h3" style="font-size:24px">${pe.isNew?'New prompt':esc(pe.name||'Prompts')}</h1>
     <div class="tplgrid" style="margin-top:20px"><div>
-      ${field('pl-name','Name',pe.name,{model:'ad.pe.name',err:err.name})}
+      <div class="half">${field('pl-name','Name',pe.name,{model:'ad.pe.name',err:err.name})}</div>
       <div class="h5" style="margin:20px 0 8px">When</div><div class="grid4">${selF('pl-day','Day',pe.day,PDAYS,'ad.pe.day')}${timeField('pl-time','Time',pe.time,'ad.pe.time')}${tzField('pl-tz',pe.tz||'Africa/Kampala','ad.pe.tz')}${selF('pl-rec','Recipients',pe.rec,recOpts,'ad.pe.rec')}</div>
       <div style="margin-top:16px">${rows||'<div class="ann" style="padding:16px 0">No prompts yet</div>'}</div>
       <div style="padding-top:4px"><button class="btn flat" data-act="planAdd">${I('add','sm')}ADD PROMPT</button></div>
@@ -1295,7 +1299,7 @@ function recSummary(e){const a=AD();
   const ts=e.recMode==='allTrainers'?a.trainers:a.trainers.filter(t=>e.recTrainers.includes(t.id));return {n:ts.length,label:plural(ts.length,'trainer')}}
 function recipientsBlock(e){
   const a=AD();
-  if(e.recMode==='fixed'||(e.kind==='Automatic')){const r=recSummary(e);return `<div><div class="h5" style="margin-bottom:4px">Recipients</div><div>${esc(e.recMode==='fixed'?e.recFixed:e.recMode==='allTrainers'?'All trainers':e.recMode==='allGroups'?'All groups':r.label)} <span class="ann">· ${r.label}</span></div><div class="cap">Nectar decides who gets this automatic message.</div></div>`}
+  if(e.recMode==='fixed'||(e.kind==='Automatic')){const r=recSummary(e);const lbl=e.recMode==='fixed'?e.recFixed:e.recMode==='allTrainers'?(e.trigger?'The group’s trainer':`All trainers (${a.trainers.length})`):e.recMode==='allGroups'?`All groups (${a.groups.length})`:r.label;return {field:selF('ed-rmode','Recipients',e.recMode,[{v:e.recMode,t:lbl}],'ad.ed.recMode'),sub:''}}
   const trainerOK=e.kind==='Announcement'||!toGroups(e);
   const opts=[{v:'allGroups',t:`All groups (${a.groups.length})`},{v:'district',t:'Groups in a district'},{v:'groups',t:'Specific groups'}].concat(trainerOK?[{v:'allTrainers',t:`All trainers (${a.trainers.length})`},{v:'trainers',t:'Specific trainers'}]:[]);
   let sub='';
@@ -1305,80 +1309,76 @@ function recipientsBlock(e){
     sub=`<div style="border:1px solid var(--fine);border-radius:4px"><div style="padding:8px;border-bottom:1px solid var(--fine)" class="row"><div class="filter" style="height:36px;flex:1">${I('search','sm')}<input id="ed-rq" placeholder="Search ${isG?'groups':'trainers'}" value="${esc(e.recQ||'')}" data-model="ad.ed.recQ" data-live="1"></div>
       <span class="cap">${chosen.length} selected</span>${chosen.length?`<button class="btn flat" data-act="recClear">CLEAR</button>`:''}</div>
       <div style="max-height:220px;overflow-y:auto;padding:4px 0">${items.map(x=>`<label class="chk" style="display:flex;padding:7px 12px"><input type="checkbox" data-change="recPick" data-id="${x.id}" ${chosen.includes(x.id)?'checked':''}><span style="flex:1">${esc(x.name)}</span><span class="cap">${isG?plural(gMembers(x.id).length,'teacher'):x.district}</span></label>`).join('')||'<div class="cap" style="padding:8px 12px">No matches</div>'}</div></div>`}
-  return `<div>${selF('ed-rmode','Recipients',e.recMode,opts,'ad.ed.recMode')}${sub?`<div style="margin-top:12px">${sub}</div>`:''}${S.ad.edErr.rec?`<div class="errtext" style="margin-left:0">${S.ad.edErr.rec}</div>`:''}</div>`;
+  return {field:selF('ed-rmode','Recipients',e.recMode,opts,'ad.ed.recMode'),sub:(sub?`<div style="margin-top:12px">${sub}</div>`:'')+(S.ad.edErr.rec?`<div class="errtext" style="margin-left:0">${S.ad.edErr.rec}</div>`:'')};
 }
 function tokField(f,label,max){
   const e=S.ad.ed;const arr=e[f];const vm=S.ad.vm;
   const html=arr.map((t,i)=>typeof t==='string'?`<span class="seg" contenteditable="true" data-f="${f}" data-i="${i}">${esc(t)}</span>`
-     :`<button class="vchip" data-act="vchip" data-f="${f}" data-i="${i}"><small>${VARS[t.v].label}</small><b>${esc(tokVal(t))}</b>${I('caret')}</button>`).join('');
+     :`<button class="vpill" data-act="vchip" data-f="${f}" data-i="${i}" aria-label="${VARS[t.v].label} variable">${VARS[t.v].label}</button>`).join('');
   const nVars=arr.filter(t=>typeof t!=='string').length;const capVars=f==='header'?1:9;
   let menu='';
   if(vm&&vm.f===f){
     if(vm.mode==='insert'||vm.mode==='swap'){const q=(S.ad.vq||'').toLowerCase();const ks=Object.keys(VARS).filter(k=>VARS[k].label.toLowerCase().includes(q));
       menu=`<div class="vmenu menuwrap" style="left:0;top:calc(100% + 4px)"><div style="padding:6px 10px"><div class="filter" style="height:36px">${I('search','sm')}<input id="vq" placeholder="Search variables" value="${esc(S.ad.vq||'')}" data-model="ad.vq" data-live="1"></div></div>
         <div class="scroll">${ks.map(k=>`<button data-act="pickVar" data-k="${k}"><span>${VARS[k].label}</span><span class="cap">${esc(VARS[k].sample())}</span></button>`).join('')||'<div class="cap" style="padding:8px 14px">No variables match</div>'}</div></div>`}
-    else if(vm.mode==='chip'){const t=arr[vm.i];const opts=VARS[t.v].opts?VARS[t.v].opts():[VARS[t.v].sample()];const cur=tokVal(t);
-      menu=`<div class="vmenu menuwrap" style="left:0;top:calc(100% + 4px)"><div style="padding:6px 14px 4px"><div class="cap" style="color:#000">Sample value</div><div class="cap">Needed for review by Meta</div></div>
-        <div class="scroll">${opts.map(o=>`<button class="${o===cur?'on':''}" data-act="pickSample" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div><hr style="border:0;border-top:1px solid var(--fine);margin:4px 0">
-        <button data-act="swapVar">Choose different variable</button><button data-act="rmVar">Remove</button></div>`}
+    else if(vm.mode==='chip'){menu=`<div class="vmenu menuwrap" style="left:0;top:calc(100% + 4px)"><button data-act="swapVar">Change variable</button><button data-act="rmVar">Remove</button></div>`}
   }
   const len=tokText(arr).length;
-  return `<div style="position:relative"><div class="tokfield" data-act="focusTok" data-f="${f}"><label>${label}</label>${html}</div>${menu}
-    <div class="counter"><span class="row" style="gap:12px"><button class="btn flat" style="padding:0 4px;font-size:13px" data-act="insertVar" data-f="${f}" ${nVars>=capVars?'disabled':''}>${I('add','sm')}INSERT VARIABLE</button>
-      ${f==='header'?`<span>${nVars} of 1 variable used in the header</span>`:S.ad.lastVar&&S.ad.lastVar.f===f?`<span>${esc(S.ad.lastVar.label)} added. Its sample value is used for Meta review.</span>`:''}</span>
-      <span id="cnt-${f}" class="${len>max?'badtext':''}">${len} / ${max}</span></div>${S.ad.edErr[f]?`<div class="errtext" style="margin-left:0">${S.ad.edErr[f]}</div>`:''}</div>`;
+  const endsVar=f==='body'&&e.status==='rejected'&&/end in a variable/.test(e.reason||'')&&arr.length>1&&arr.at(-1)===''&&typeof arr.at(-2)!=='string';
+  const err=S.ad.edErr[f]||(endsVar?'End the message with text, not a variable.':'');
+  return `<div style="position:relative"><div class="tokfield ${err?'tokerr':''}" data-act="focusTok" data-f="${f}"><label>${label}</label>${html}</div>${menu}
+    ${err?`<div class="errtext" style="margin-left:0">${err}</div>`:''}
+    <div class="counter"><button class="btn flat" style="padding:0 4px;font-size:13px" data-act="insertVar" data-f="${f}" ${nVars>=capVars?'disabled':''}>${I('add','sm')}INSERT VARIABLE</button>
+      <span id="cnt-${f}" class="${len>max?'badtext':''}">${len} / ${max}</span></div></div>`;
 }
+function pvTarget(e){const a=AD();if(toGroups(e)){const gs=recGroupList(e);return {kind:'group',list:gs,cur:gs.find(g=>g.id===e.pv)||gs[0]}}const ts=e.recMode==='trainers'?a.trainers.filter(t=>e.recTrainers.includes(t.id)):a.trainers;return {kind:'trainer',list:ts,cur:ts.find(t=>t.id===e.pv)||ts[0]}}
+function pvText(e,arr){const p=pvTarget(e);const c=p.cur;return (arr||[]).map(t=>{if(typeof t==='string')return t;if(c){if(t.v==='group'&&p.kind==='group')return c.name;if(t.v==='district')return c.district;if(t.v==='trainer')return p.kind==='trainer'?c.name:(trn(c.trainer)?.name||'');}return tokVal(t)}).join('')}
+function pvPicker(e){const vars=e.body.concat(e.header).some(t=>t&&typeof t!=='string');if(!vars)return '';const p=pvTarget(e);if(!p.list.length)return '';return `<div style="margin-bottom:16px">${selF('ed-pv','Preview as',p.cur?.id||'',p.list.map(x=>({v:x.id,t:x.name})),'ad.ed.pv')}</div>`}
 function previewHtml(){
-  const e=S.ad.ed;const head=e.headerType==='text'?tokText(e.header):'';
-  const media=e.headerType==='media'&&e.media.state==='done'?`<div class="row" style="gap:10px;background:#f2f2f2;border-radius:4px;padding:8px;margin-bottom:8px"><span class="pdf" style="${e.media.kind==='PDF'?'':'background:#5c8ee6'}">${e.media.kind||'IMG'}</span><div><div style="font-weight:600">${esc(e.media.file)}</div><div class="cap">${esc(e.media.meta||'')}</div></div></div>`:'';
+  const e=S.ad.ed;const head=e.headerType==='text'?pvText(e,e.header):'';
+  const fixedDoc=e.kind==='Automatic'&&e.media.kind==='PDF';const pvT=pvTarget(e).cur;
+  const media=fixedDoc?`<div class="row" style="gap:10px;background:#f2f2f2;border-radius:4px;padding:8px;margin-bottom:8px"><span class="pdf">PDF</span><div><div style="font-weight:600">Digest – ${esc(pvT?.name||'Ruth Okot')} – 18–24 Jan.pdf</div><div class="cap">3 pages · PDF · 180 KB</div></div></div>`:e.headerType==='media'&&e.media.state==='done'?`<div class="row" style="gap:10px;background:#f2f2f2;border-radius:4px;padding:8px;margin-bottom:8px"><span class="pdf" style="${e.media.kind==='PDF'?'':'background:#5c8ee6'}">${e.media.kind||'IMG'}</span><div><div style="font-weight:600">${esc(e.media.file)}</div><div class="cap">${esc(e.media.meta||'')}</div></div></div>`:'';
   const warn=e.body.concat(e.header).some(t=>t&&t.v==='trainer')&&AD().groups.some(g=>!g.trainer)&&recGroupList(e).some(g=>!g.trainer)
-    ?`<div class="note" style="margin-top:12px;color:#000">${I('warn','sm')}<span>${plural(recGroupList(e).filter(g=>!g.trainer).length,'group')} ${recGroupList(e).filter(g=>!g.trainer).length===1?'has':'have'} no trainer yet, so Trainer name would be empty. Choose a trainer or remove the variable.</span></div>`:'';
-  return `<div class="preview"><div class="bubble">${media}${head?`<div style="font-weight:600;margin-bottom:6px">${esc(head)}</div>`:''}${esc(tokText(e.body))||'<span class="ann">Message preview</span>'}${e.footer?`<div class="cap" style="margin-top:8px">${esc(e.footer)}</div>`:''}</div></div>${warn}`;
+    ?`<div class="note" style="margin-top:12px;color:#000">${I('warn','sm')}<span>${(()=>{const ng=recGroupList(e).filter(g=>!g.trainer);return ng.length===1?`${esc(ng[0].name)} has no trainer, so Trainer name will be empty.`:`${ng.length} groups have no trainer, so Trainer name will be empty.`})()}</span></div>`:'';
+  return `<div class="preview"><div class="bubble">${media}${head?`<div style="font-weight:600;margin-bottom:6px">${esc(head)}</div>`:''}${esc(pvText(e,e.body))||'<span class="ann">Message preview</span>'}${e.footer?`<div class="cap" style="margin-top:8px">${esc(e.footer)}</div>`:''}</div></div>${warn}`;
 }
 function updateEdLive(){const p=document.getElementById('tplpreview');if(p)p.innerHTML=previewHtml();
   for(const [f,max] of [['header',60],['body',1024]]){const c=document.getElementById('cnt-'+f);if(c){const l=tokText(S.ad.ed[f]).length;c.textContent=l+' / '+max;c.className=l>max?'badtext':''}}}
+const PLAIN_REASON={'template body cannot end in a variable':'It can’t end with a variable.'};
 function scrTpl(){
-  const e=S.ad.ed;const auto=e.kind==='Automatic';
-  const statusBadge=e.isNew?'':chip(e.status);
-  const sub=auto?`Automatic · Sent by Nectar · Utility`:`${e.kind} · Utility`;
-  const TYPE_DESC={Prompt:'Prompts ask teachers a reflection question, and can repeat on a schedule.',Announcement:'Announcements send once.'};
-  const typeBlock=e.isNew?''
-    :`<div><div class="h5">Type</div><div style="margin-top:4px">${auto?(e.trigger?'Automatic (sent when something happens)':'Automatic (Nectar writes it each time)'):e.kind}</div></div>`;
-  const nameField=(e.isNew||e.kind==='Announcement')?field('ed-name','Template name',e.name,{model:'ad.ed.name',err:S.ad.edErr.name,help:'Visible to admins only'}):'';
-  const timeOpts=null;
-  const when=e.trigger?`<div><div class="h5" style="margin-bottom:8px">When it’s sent</div><div style="max-width:300px">${e.triggerLabel?selF('ed-trig',e.triggerLabel,e.triggerVal,['1 week','2 weeks','3 weeks','4 weeks'],'ad.ed.triggerVal'):`<div class="ann">${esc(AD().templates.find(t=>t.id===e.id)?.freq||'')}</div>`}</div>
-      <div class="cap" style="margin-top:6px">Changing when it’s sent doesn’t need Meta review. Teacher names are never included.</div></div>`
-    :auto?`<div><div class="h5" style="margin-bottom:8px">When</div><div class="grid4">${selF('ed-day','Day',e.day,ALLDAYS,'ad.ed.day')}${timeField('ed-time','Time',e.time,'ad.ed.time')}${tzField('ed-tz',e.tz,'ad.ed.tz')}${selF('ed-rep','Repeat',e.repeat,['Weekly','Every 2 weeks'],'ad.ed.repeat')}</div></div>`
-    :`<div><div class="h5" style="margin-bottom:8px">When</div><div class="grid4">${dateField('ed-date','Date',e.date,'ad.ed.date')}
-        ${timeField('ed-time','Time',e.time,'ad.ed.time')}${tzField('ed-tz',e.tz,'ad.ed.tz')}${e.kind==='Announcement'?'':selF('ed-rep','Repeat',e.repeat,['Does not repeat','Weekly','Every 2 weeks'],'ad.ed.repeat')}</div></div>`;
-  const rs=recSummary(e);const n=rs.n;
-  const m=e.media;
-  const mediaBox=m.state==='done'?`<div class="mediabox"><div class="cap" style="margin-bottom:6px">Header ${m.kind==='PDF'?'document':'image'}</div><div class="row"><span class="pdf" style="${m.kind==='PDF'?'':'background:#5c8ee6'}">${m.kind||'IMG'}</span><div style="flex:1"><div style="font-weight:600">${esc(m.file)}</div><div class="cap">${esc(m.meta)}</div></div>
-        <button class="btn flat" style="color:#000" data-act="notInProto">VIEW SAMPLE</button><button class="btn flat" style="color:#000" data-act="mediaPick">REPLACE</button>${m.kind==='PDF'?'':'<button class="btn flat danger" data-act="mediaRm">REMOVE</button>'}</div>
-        ${e.id==='digest'?'<div class="cap" style="margin-top:10px;text-transform:uppercase">Sent each week</div><div>A new digest for each trainer, generated by Nectar on Thursday · File name: Digest – {Trainer name} – {Week dates}.pdf</div>':''}</div>
-      <div class="help" style="margin-left:0">${m.kind==='PDF'?'PDF up to 100 MB. Meta only reviews the sample. The weekly files are attached when sending and don’t need review.':'Image (JPG or PNG) up to 5 MB.'}</div>`
+  const e=S.ad.ed;const auto=e.kind==='Automatic';const a=AD();
+  const statusBadge=e.isNew||e.status==='rejected'?'':chip(e.status);
+  const nameField=(e.isNew||e.kind==='Announcement')?`<div class="half">${field('ed-name','Name',e.name,{model:'ad.ed.name',err:S.ad.edErr.name})}</div>`:'';
+  const rb=recipientsBlock(e);const n=recSummary(e).n;
+  const costLine=`<div class="row" style="gap:6px;margin-top:16px"><span>Estimated cost per send: ≈ $X.XX</span><span class="tip tipw ann" tabindex="0" aria-label="How this is estimated" data-tip="${n} recipients${toGroups(e)?` in ${plural(recGroupList(e).length,'group')}`:''} × Utility rate (Rest of Africa). Final cost depends on delivery." style="display:inline-flex;cursor:help">${I('info','sm')}</span></div>`;
+  const when=e.trigger?`<div><div class="h5" style="margin-bottom:8px">When it’s sent</div><div class="grid4"><div style="grid-column:span 2">${e.triggerLabel?selF('ed-trig',e.triggerLabel,e.triggerVal,['1 week','2 weeks','3 weeks','4 weeks'],'ad.ed.triggerVal'):`<div class="ann" style="padding-top:12px">${esc(a.templates.find(t=>t.id===e.id)?.freq||'')}</div>`}</div>${rb.field}</div>${rb.sub}${costLine}</div>`
+    :`<div><div class="h5" style="margin-bottom:8px">When</div><div class="grid4">${auto?selF('ed-day','Day',e.day,ALLDAYS,'ad.ed.day'):dateField('ed-date','Date',e.date,'ad.ed.date')}${timeField('ed-time','Time',e.time,'ad.ed.time')}${tzField('ed-tz',e.tz,'ad.ed.tz')}${rb.field}</div>${rb.sub}${costLine}</div>`;
+  const m=e.media;const fixedDoc=auto&&m.kind==='PDF';
+  const mediaBox=fixedDoc?`<div class="mediabox"><div class="cap" style="margin-bottom:6px">Header</div><div class="row"><span class="pdf">PDF</span><div style="flex:1"><div style="font-weight:600">${esc(e.name)} PDF</div><div class="cap">Made by Nectar each week</div></div><button class="btn flat" style="color:#000" data-act="notInProto">VIEW SAMPLE</button></div></div>`
+    :m.state==='done'?`<div class="mediabox"><div class="cap" style="margin-bottom:6px">Header ${m.kind==='PDF'?'document':'image'}</div><div class="row"><span class="pdf" style="${m.kind==='PDF'?'':'background:#5c8ee6'}">${m.kind||'IMG'}</span><div style="flex:1"><div style="font-weight:600">${esc(m.file)}</div><div class="cap">${esc(m.meta)}</div></div>
+        <button class="btn flat" style="color:#000" data-act="mediaPick">REPLACE</button><button class="btn flat danger" data-act="mediaRm">REMOVE</button></div></div>
+      <div class="help" style="margin-left:0">Image up to 5 MB · Video up to 16 MB · PDF up to 100 MB</div>`
     :m.state==='loading'?`<div class="mediabox"><div class="loading" style="padding:8px">${'<div class="spinner"></div>'}<span>Uploading ${esc(m.file)}…</span></div></div>`
     :`<div class="drop" style="padding:24px">${I('upload')}<div>Drag an image, video or PDF here, or</div><button class="btn secondary" data-act="mediaPick">CHOOSE FILE</button>
         <div class="cap">Image up to 5 MB · Video up to 16 MB · PDF up to 100 MB</div><button class="link cap" data-act="mediaBig">Prototype: try a file that’s too large</button></div>
       ${m.state==='big'?`<div class="errtext" style="margin-left:0">trainer-visit-video.mp4 is 48 MB. Videos can be up to 16 MB. Try a shorter clip.</div>`:''}`;
-  const left=e.isNew?'':e.status==='approved'?'Approved · 8 of 10 edits left in the next 30 days. Text changes are reviewed by Meta again.':e.status==='pending'?'In review with Meta · usually within 24 hours':e.status==='rejected'?'Rejected by Meta · fix the problem and resubmit':e.status==='paused'?'Paused · nothing sends until you resume it':'Draft';
-  const inner=`<div class="apage" style="max-width:1300px">
-    <div class="row" style="gap:12px"><h1 class="h3" style="font-size:24px">${e.isNew?'New '+e.kind.toLowerCase():esc(e.name)}</h1>${statusBadge}</div>
-    ${e.isNew?'':`<div class="cap">${sub}</div>`}
-    ${e.status==='rejected'?`<div class="alert error" style="margin-top:16px">${I('err')}<div>Rejection reason: ${esc(e.reason||'')}</div></div>`:''}
-    ${e.sent?`<div class="alert info" style="margin-top:16px">${I('info')}<div>This week’s message has already been sent. Changes apply to future sends.</div></div>`:''}
-    <div class="tplgrid" style="margin-top:20px"><div class="stack">
-      ${typeBlock}${nameField}${when}
-      ${recipientsBlock(e)}
-      <div class="row" style="gap:6px"><b>Estimated cost per send: ≈ $X.XX</b><span class="tip tipw ann" tabindex="0" aria-label="How this is estimated" data-tip="${n} recipients${toGroups(e)?` in ${plural(recGroupList(e).length,'group')}`:''} × Utility rate (Rest of Africa). Final cost depends on delivery." style="display:inline-flex;cursor:help">${I('info','sm')}</span></div>
-      <div class="radios"><span class="h5">Header</span>
+  const left=!e.isNew&&e.status==='approved'?'8 of 10 edits left this month':'';
+  const header=fixedDoc?mediaBox:`<div class="radios"><span class="h5">Header</span>
         <label class="chk"><input type="radio" name="htype" value="text" data-change="edHead" ${e.headerType==='text'?'checked':''}> Text</label>
         <label class="chk"><input type="radio" name="htype" value="media" data-change="edHead" ${e.headerType==='media'?'checked':''}> Image, video or document</label></div>
-      ${e.headerType==='text'?tokField('header','Header (optional)',60):mediaBox}
+      ${e.headerType==='text'?tokField('header','Header (optional)',60):mediaBox}`;
+  const inner=`<div class="apage" style="max-width:1300px">
+    <div class="row" style="gap:12px"><h1 class="h3" style="font-size:24px">${e.isNew?'New '+e.kind.toLowerCase():esc(e.name)}</h1>${statusBadge}</div>
+    ${e.status==='rejected'?`<div class="alert error" style="margin-top:16px">${I('err')}<div>Meta rejected this message. ${esc(PLAIN_REASON[e.reason]||e.reason||'')}</div></div>`:''}
+    ${e.sent?`<div class="alert info" style="margin-top:16px">${I('info')}<div>This week’s message has already been sent. Changes apply to future sends.</div></div>`:''}
+    <div class="tplgrid" style="margin-top:20px"><div class="stack">
+      ${nameField}${when}
+      <div class="h5" style="margin-bottom:-8px">Message</div>
+      ${header}
       ${tokField('body','Body (required)',1024)}
-      <div>${field('ed-footer','Footer (optional)',e.footer,{model:'ad.ed.footer'})}<div class="counter"><span>Variables can’t be used in the footer.</span><span>${e.footer.length} / 60</span></div></div>
+      <div>${field('ed-footer','Footer (optional)',e.footer,{model:'ad.ed.footer'})}<div class="counter"><span></span><span>${e.footer.length} / 60</span></div></div>
     </div>
-    <div style="position:sticky;top:80px"><div class="h5" style="margin-bottom:8px">Preview</div><div id="tplpreview">${previewHtml()}</div></div></div></div>`;
+    <div style="position:sticky;top:80px"><div class="h5" style="margin-bottom:8px">Preview</div>${pvPicker(e)}<div id="tplpreview">${previewHtml()}</div></div></div></div>`;
   return ashell('schedule',inner)+`<div class="bottombar"><span class="ann">${left}</span><span class="spacer"></span>
      <button class="btn flat" style="color:#000" data-act="edCancel">CANCEL</button><button class="btn flat" style="color:#000" data-act="edDraft">SAVE DRAFT</button>
      <button class="btn primary" data-act="edSubmit">${e.status==='rejected'?'RESUBMIT FOR REVIEW':'SUBMIT FOR REVIEW'}</button></div><div style="height:72px"></div>`;
